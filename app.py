@@ -1,8 +1,17 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+import csv
+import io
+from flask import Flask, Response, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime
 from flask_migrate import Migrate
+from flask import render_template, request, redirect, url_for, flash
+from datetime import datetime, timedelta
+from flask import request
+from sqlalchemy import func
+from flask import render_template, request, Response
+from weasyprint import HTML
+from datetime import datetime, timedelta
 
 
 app = Flask(__name__)
@@ -69,19 +78,108 @@ with app.app_context():
 
 @app.route('/')
 def home():
-    ingredients = Ingredient.query.all()
-    return render_template('index.html', ingredients=ingredients)
+    # Récupérer les dates passées en GET ou par défaut : début du mois à aujourd'hui
+    date_to = request.args.get('date_to', datetime.utcnow().date().isoformat())
+    date_from = request.args.get('date_from',
+                (datetime.fromisoformat(date_to) - timedelta(days=30)).date().isoformat())
 
-@app.route('/ajouter', methods=['POST'])
+    # Convertir en datetime
+    dt_from = datetime.fromisoformat(date_from)
+    dt_to   = datetime.fromisoformat(date_to) + timedelta(days=1)  # inclure la journée
+
+    # Statistiques globales
+    count_ingredients    = Ingredient.query.count()
+    count_recettes       = Recette.query.count()
+    total_stock_cuisine  = db.session.query(func.sum(Ingredient.stock_cuisine)).scalar() or 0
+
+    # Historique filtré : Ventes et Transferts du mois
+    ventes_mois = Vente.query.filter(Vente.date >= dt_from, Vente.date < dt_to).all()
+    transferts_mois = HistoriqueTransfert.query.filter(
+                        HistoriqueTransfert.date >= dt_from,
+                        HistoriqueTransfert.date < dt_to
+                      ).all()
+
+    current_time = datetime.utcnow()
+
+    return render_template(
+        'home.html',
+        count_ingredients=count_ingredients,
+        count_recettes=count_recettes,
+        total_stock_cuisine=total_stock_cuisine,
+        ventes_mois=ventes_mois,
+        transferts_mois=transferts_mois,
+        current_time=current_time,
+        date_from=date_from,
+        date_to=date_to
+    )
+
+
+@app.route('/rapport/journalier')
+def rapport_journalier():
+    # Récupérer la date voulue (par défaut aujourd'hui)
+    date_str = request.args.get('date', datetime.utcnow().date().isoformat())
+    dt = datetime.fromisoformat(date_str)
+    dt_next = dt + timedelta(days=1)
+
+    # Récupérer les ventes et transferts de la journée
+    ventes = Vente.query.filter(Vente.date >= dt, Vente.date < dt_next).all()
+    transferts = HistoriqueTransfert.query.filter(
+        HistoriqueTransfert.date >= dt, HistoriqueTransfert.date < dt_next
+    ).all()
+
+    # Création du CSV en mémoire
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';')
+    writer.writerow(['Type','Date','Nom','Quantité','Unité','Sens éventuel'])
+
+    for v in ventes:
+        writer.writerow(['Vente', v.date.strftime('%Y-%m-%d %H:%M'), v.recette.nom, v.quantite, '', ''])
+    for t in transferts:
+        sens = 'Mag→Cui' if t.sens=='magasin_vers_cuisine' else 'Cui→Mag'
+        writer.writerow(['Transfert', t.date.strftime('%Y-%m-%d %H:%M'), t.ingredient.nom, t.quantite, t.unite, sens])
+
+    # Préparer la réponse
+    output.seek(0)
+    filename = f"rapport_{date_str}.csv"
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-disposition": f"attachment; filename={filename}"}
+    )
+
+@app.route('/ajouter', methods=['GET', 'POST'])
 def ajouter():
-    nom = request.form['nom']
-    unite = request.form['unite']
-    stock_magasin = float(request.form.get('stock_magasin', 0))
-    stock_cuisine = float(request.form.get('stock_cuisine', 0))
-    nouveau = Ingredient(nom=nom, unite=unite, stock_magasin=stock_magasin, stock_cuisine=stock_cuisine)
-    db.session.add(nouveau)
-    db.session.commit()
-    return redirect(url_for('home'))
+    # Si on envoie le formulaire (POST)
+    if request.method == 'POST':
+        try:
+            nom = request.form['nom']
+            unite = request.form['unite']
+            stock_magasin = float(request.form.get('stock_magasin', 0))
+            stock_cuisine = float(request.form.get('stock_cuisine', 0))
+
+            nouveau = Ingredient(
+                nom=nom,
+                unite=unite,
+                stock_magasin=stock_magasin,
+                stock_cuisine=stock_cuisine
+            )
+            db.session.add(nouveau)
+            db.session.commit()
+            # Après un POST réussi, on redirige vers dashboard ou home
+            return redirect(url_for('home'))
+
+        except Exception as e:
+            # En cas d’erreur, on annule la transaction et on affiche un message
+            db.session.rollback()
+            flash(f"Erreur lors de l'ajout : {e}", "error")
+            # Ici, on ne return **pas** tout de suite le template,
+            # on laisse tomber dans le bloc GET pour réafficher le formulaire
+            # avec le message flash.
+
+    # Si on arrive ici, c’est pour un GET, ou pour réafficher après exception
+    ingredients = Ingredient.query.all()
+    return render_template('ajouter.html', ingredients=ingredients)
+    
 
 @app.route('/modifier/<int:id>', methods=['POST'])
 def modifier(id):
@@ -90,6 +188,12 @@ def modifier(id):
     ingr.stock_magasin = float(request.form.get('stock_magasin', ingr.stock_magasin))
     db.session.commit()
     return redirect(url_for('home'))
+
+        # GET : on récupère et on passe les ingrédients à la page
+    all_ingredients = Ingredient.query.all()
+    return render_template('ajouter.html', ingredients=all_ingredients)
+
+
 
 @app.route('/supprimer/<int:id>', methods=['POST'])
 def supprimer(id):
@@ -253,6 +357,43 @@ def transfert():
     return render_template('transfert.html', ingredients=ingredients, transferts=transferts)
 
 
+
+@app.route('/rapport/pdf')
+def rapport_pdf():
+    # Date du rapport (par défaut aujourd'hui)
+    date_str = request.args.get('date', datetime.utcnow().date().isoformat())
+    dt = datetime.fromisoformat(date_str)
+    dt_next = dt + timedelta(days=1)
+
+    # Données
+    ventes = Vente.query.filter(Vente.date >= dt, Vente.date < dt_next).all()
+    transferts = HistoriqueTransfert.query.filter(
+        HistoriqueTransfert.date >= dt, HistoriqueTransfert.date < dt_next
+    ).all()
+
+    # Rendu HTML du template
+    html_out = render_template(
+        'rapport.html',
+        date_str=date_str,
+        ventes=ventes,
+        transferts=transferts
+    )
+
+    # Conversion en PDF
+    pdf = HTML(string=html_out).write_pdf()
+
+    # Retourner le PDF
+    return Response(
+        pdf,
+        mimetype='application/pdf',
+        headers={
+            'Content-Disposition': f'attachment; filename=rapport_{date_str}.pdf'
+        }
+    )
+
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
+
 
