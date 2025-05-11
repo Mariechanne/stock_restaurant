@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier la recette</title>
+</head>
+<body>
+    <h1>Modifier la recette</h1>
+
+    <form method="POST">
+        <label>Nom de la recette :</label>
+        <input type="text" name="nom" value="{{ recette.nom }}" required><br><br>
+
+        <h3>Ingrédients utilisés</h3>
+        {% for ingr in ingredients %}
+            <label>
+                <input type="checkbox" name="ingredient_id" value="{{ ingr.id }}"
+                    {% if ingr.id in quantites %}checked{% endif %}>
+                {{ ingr.nom }} ({{ ingr.unite }})
+            </label>
+            <input type="number" step="0.01" name="quantite_{{ ingr.id }}"
+                   placeholder="Quantité utilisée"
+                   value="{{ quantites.get(ingr.id, '') }}">
+            <br>
+        {% endfor %}
+
+        <br>
+        <button type="submit">💾 Enregistrer les modifications</button>
+    </form>
+
+    <p><a href="{{ url_for('recettes') }}">← Retour aux recettes</a></p>
+</body>
+</html>

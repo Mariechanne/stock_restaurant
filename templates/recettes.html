@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Fiches Techniques</title>
+</head>
+<body>
+    <h1>Créer une nouvelle recette</h1>
+    <form method="POST">
+        <label>Nom de la recette :</label>
+        <input type="text" name="nom" required><br><br>
+
+        <h3>Ingrédients utilisés</h3>
+        {% for ingr in ingredients %}
+            <input type="checkbox" name="ingredient_id" value="{{ ingr.id }}">
+            {{ ingr.nom }} ({{ ingr.unite }})
+            <input type="number" step="0.01" name="quantite" placeholder="Quantité utilisée">
+            <br>
+        {% endfor %}
+        <br>
+        <button type="submit">Créer la recette</button>
+    </form>
+
+    <hr>
+    <h2>Recettes existantes</h2>
+    <ul>
+        {% for recette in recettes %}
+        <li>
+            <strong>{{ recette.nom }}</strong>
+            (<a href="{{ url_for('modifier_recette', id=recette.id) }}">✏ Modifier</a>
+            <form action="{{ url_for('supprimer_recette', id=recette.id) }}" method="POST" style="display:inline;">
+                <button type="submit" onclick="return confirm('Supprimer cette recette ?')">🗑 Supprimer</button>
+            </form>)
+            <ul>
+                {% for ri in recette.ingredients %}
+                    <li>{{ ri.ingredient.nom }} : {{ ri.quantite }} {{ ri.ingredient.unite }}</li>
+                {% endfor %}
+            </ul>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <p><a href="{{ url_for('home') }}">← Retour à l'accueil</a></p>
+</body>
+</html>

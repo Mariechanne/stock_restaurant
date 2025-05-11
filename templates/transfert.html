@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Transfert de stock</title>
+</head>
+<body>
+    <h1>Transfert de stock : Magasin ↔ Cuisine</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                    <li><strong>{{ message }}</strong></li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <label for="ingredient">Ingrédient :</label>
+        <select name="ingredient" required>
+            {% for ingr in ingredients %}
+                <option value="{{ ingr.id }}">
+                    {{ ingr.nom }} (Magasin : {{ ingr.stock_magasin }} {{ ingr.unite }} | Cuisine : {{ ingr.stock_cuisine }} {{ ingr.unite }})
+                </option>
+            {% endfor %}
+        </select>
+        <br><br>
+
+        <label>Quantité à transférer :</label>
+        <input type="number" step="0.01" name="quantite" required>
+        <br><br>
+
+        <label for="sens">Sens du transfert :</label>
+        <select name="sens" required>
+            <option value="magasin_vers_cuisine">Magasin → Cuisine</option>
+            <option value="cuisine_vers_magasin">Cuisine → Magasin</option>
+        </select>
+        <br><br>
+
+        <button type="submit">Transférer</button>
+    </form>
+
+    <hr>
+    <h2>Historique des transferts</h2>
+    <ul>
+        {% for t in transferts %}
+            <li>
+                {{ t.date.strftime("%d/%m/%Y %H:%M") }} –
+                {{ t.ingredient.nom }} :
+                {{ t.quantite }} {{ t.ingredient.unite }}
+                ({{ "Magasin → Cuisine" if t.sens == "magasin_vers_cuisine" else "Cuisine → Magasin" }})
+            </li>
+        {% endfor %}
+    </ul>
+
+    <p><a href="{{ url_for('home') }}">← Retour à l'accueil</a></p>
+</body>
+</html>

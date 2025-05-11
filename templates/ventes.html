@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    {% if message %}
+  <p style="color: green;">{{ message }}</p>
+{% endif %}
+
+<head>
+    <title>Vente de plats</title>
+</head>
+<body>
+    <h1>Enregistrer une vente</h1>
+    <form method="POST">
+        <label for="recette_id">Plat vendu :</label>
+        <select name="recette_id">
+            {% for recette in recettes %}
+                <option value="{{ recette.id }}">{{ recette.nom }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="quantite">Quantité :</label>
+        <input type="number" name="quantite" value="1" min="1" required>
+
+        <button type="submit">Valider la vente</button>
+    </form>
+
+    <a href="/">⬅ Retour</a>
+</body>
+</html>
