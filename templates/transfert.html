@@ -1,60 +1,105 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
+  <head>
     <meta charset="UTF-8">
-    <title>Transfert de stock</title>
-</head>
-<body>
-    <h1>Transfert de stock : Magasin ↔ Cuisine</h1>
+    <title>Transfert de Stock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body class="bg-light">
+    <div class="container mt-5">
+      <h1 class="text-center mb-4">↔️ Transfert de Stock</h1>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <ul>
-                {% for category, message in messages %}
-                    <li><strong>{{ message }}</strong></li>
-                {% endfor %}
-            </ul>
+          {% for category, msg in messages %}
+            <div class="alert alert-{{ 'danger' if category=='error' else 'success' }}">{{ msg }}</div>
+          {% endfor %}
         {% endif %}
-    {% endwith %}
+      {% endwith %}
 
-    <form method="POST">
-        <label for="ingredient">Ingrédient :</label>
-        <select name="ingredient" required>
-            {% for ingr in ingredients %}
-                <option value="{{ ingr.id }}">
-                    {{ ingr.nom }} (Magasin : {{ ingr.stock_magasin }} {{ ingr.unite }} | Cuisine : {{ ingr.stock_cuisine }} {{ ingr.unite }})
-                </option>
-            {% endfor %}
-        </select>
-        <br><br>
+      <div class="card mb-5">
+        <div class="card-header bg-info text-white">Effectuer un transfert</div>
+        <div class="card-body">
+          <form method="POST">
+            <div class="mb-3">
+              <label for="ingredient" class="form-label">Ingrédient :</label>
+              <select name="ingredient" id="ingredient" class="form-select" required>
+                <option value="">-- Sélectionner --</option>
+                {% for ingr in ingredients %}
+                  <option value="{{ ingr.id }}">{{ ingr.nom }} (Magasin: {{ ingr.stock_magasin }}, Cuisine: {{ ingr.stock_cuisine }})</option>
+                {% endfor %}
+              </select>
+            </div>
 
-        <label>Quantité à transférer :</label>
-        <input type="number" step="0.01" name="quantite" required>
-        <br><br>
+            <div class="mb-3">
+              <label for="quantite" class="form-label">Quantité :</label>
+              <input type="number" name="quantite" id="quantite" class="form-control" step="0.01" required>
+            </div>
 
-        <label for="sens">Sens du transfert :</label>
-        <select name="sens" required>
-            <option value="magasin_vers_cuisine">Magasin → Cuisine</option>
-            <option value="cuisine_vers_magasin">Cuisine → Magasin</option>
-        </select>
-        <br><br>
+            <div class="mb-3">
+              <label class="form-label">Sens du transfert :</label>
+              <div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="sens" id="m2c" value="magasin_vers_cuisine" checked>
+                  <label class="form-check-label" for="m2c">Magasin → Cuisine</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="sens" id="c2m" value="cuisine_vers_magasin">
+                  <label class="form-check-label" for="c2m">Cuisine → Magasin</label>
+                </div>
+              </div>
+            </div>
 
-        <button type="submit">Transférer</button>
-    </form>
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary">🚚 Transférer</button>
+            </div>
+          </form>
+        </div>
+      </div>
 
-    <hr>
-    <h2>Historique des transferts</h2>
-    <ul>
-        {% for t in transferts %}
-            <li>
-                {{ t.date.strftime("%d/%m/%Y %H:%M") }} –
-                {{ t.ingredient.nom }} :
-                {{ t.quantite }} {{ t.ingredient.unite }}
-                ({{ "Magasin → Cuisine" if t.sens == "magasin_vers_cuisine" else "Cuisine → Magasin" }})
-            </li>
-        {% endfor %}
-    </ul>
+      <div class="card">
+        <div class="card-header bg-secondary text-white">Historique des transferts</div>
+        <div class="card-body">
+          {% if transferts %}
+            <table class="table table-sm table-striped">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Ingrédient</th>
+                  <th>Quantité</th>
+                  <th>Unité</th>
+                  <th>Direction</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for t in transferts %}
+                  <tr>
+                    <td>{{ t.date.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>{{ t.ingredient.nom }}</td>
+                    <td>{{ t.quantite }}</td>
+                    <td>{{ t.unite }}</td>
+                    <td>
+                      {% if t.sens == 'magasin_vers_cuisine' %}
+                        Magasin → Cuisine
+                      {% else %}
+                        Cuisine → Magasin
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p class="text-muted">Aucun transfert enregistré.</p>
+          {% endif %}
+        </div>
+      </div>
 
-    <p><a href="{{ url_for('home') }}">← Retour à l'accueil</a></p>
-</body>
+      <div class="text-center mt-4">
+        <a href="{{ url_for('home') }}" class="btn btn-outline-dark">← Retour à l'accueil</a>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
 </html>

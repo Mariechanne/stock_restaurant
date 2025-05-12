@@ -1,33 +1,67 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
+  <head>
     <meta charset="UTF-8">
-    <title>Modifier la recette</title>
-</head>
-<body>
-    <h1>Modifier la recette</h1>
+    <title>Modifier Recette</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body class="bg-light">
+    <div class="container mt-5">
+      <h1 class="text-center mb-4">✏ Modifier la recette “{{ recette.nom }}”</h1>
 
-    <form method="POST">
-        <label>Nom de la recette :</label>
-        <input type="text" name="nom" value="{{ recette.nom }}" required><br><br>
+      <div class="card">
+        <div class="card-body">
+          <form method="POST">
+            <div class="mb-3">
+              <label for="nom" class="form-label">Nom de la recette :</label>
+              <input type="text" id="nom" name="nom" class="form-control" value="{{ recette.nom }}" required>
+            </div>
 
-        <h3>Ingrédients utilisés</h3>
-        {% for ingr in ingredients %}
-            <label>
-                <input type="checkbox" name="ingredient_id" value="{{ ingr.id }}"
-                    {% if ingr.id in quantites %}checked{% endif %}>
-                {{ ingr.nom }} ({{ ingr.unite }})
-            </label>
-            <input type="number" step="0.01" name="quantite_{{ ingr.id }}"
-                   placeholder="Quantité utilisée"
-                   value="{{ quantites.get(ingr.id, '') }}">
-            <br>
-        {% endfor %}
+            <h5 class="mt-4">Ingrédients</h5>
+            {% for ingr in ingredients %}
+              <div class="row align-items-center mb-2">
+                <div class="col-auto">
+                  <input
+                    type="checkbox"
+                    name="ingredient_id"
+                    value="{{ ingr.id }}"
+                    {% if ingr.id in quantites %}checked{% endif %}
+                  >
+                  <label>{{ ingr.nom }} ({{ ingr.unite }})</label>
+                </div>
+                <div class="col">
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="quantite_{{ ingr.id }}"
+                    class="form-control"
+                    placeholder="Quantité"
+                    value="{{ quantites.get(ingr.id, '') }}"
+                    {% if ingr.id not in quantites %}disabled{% endif %}
+                  >
+                </div>
+              </div>
+            {% endfor %}
 
-        <br>
-        <button type="submit">💾 Enregistrer les modifications</button>
-    </form>
+            <div class="text-end mt-3">
+              <button type="submit" class="btn btn-warning">💾 Enregistrer les modifications</button>
+              <a href="{{ url_for('recettes') }}" class="btn btn-outline-secondary ms-2">← Annuler</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
-    <p><a href="{{ url_for('recettes') }}">← Retour aux recettes</a></p>
-</body>
+    <script>
+      // Activer/désactiver le champ quantité selon la checkbox
+      document.querySelectorAll('input[type="checkbox"][name="ingredient_id"]').forEach(cb => {
+        cb.addEventListener('change', e => {
+          const qty = document.querySelector(`input[name="quantite_${e.target.value}"]`);
+          qty.disabled = !e.target.checked;
+          if (!e.target.checked) qty.value = '';
+        });
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
 </html>

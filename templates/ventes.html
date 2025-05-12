@@ -1,28 +1,48 @@
 <!DOCTYPE html>
-<html>
-    {% if message %}
-  <p style="color: green;">{{ message }}</p>
-{% endif %}
-
-<head>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
     <title>Vente de plats</title>
-</head>
-<body>
-    <h1>Enregistrer une vente</h1>
-    <form method="POST">
-        <label for="recette_id">Plat vendu :</label>
-        <select name="recette_id">
-            {% for recette in recettes %}
-                <option value="{{ recette.id }}">{{ recette.nom }}</option>
-            {% endfor %}
-        </select>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body class="bg-light">
+    <div class="container mt-5">
+      <h1 class="text-center mb-4">🍽 Vente de plats</h1>
 
-        <label for="quantite">Quantité :</label>
-        <input type="number" name="quantite" value="1" min="1" required>
+      {% if message %}
+        <div class="alert alert-success text-center">{{ message }}</div>
+      {% endif %}
 
-        <button type="submit">Valider la vente</button>
-    </form>
+      <div class="card">
+        <div class="card-header bg-primary text-white">Enregistrer une vente</div>
+        <div class="card-body">
+          <form method="POST">
+            <div class="mb-3">
+              <label for="recette_id" class="form-label">Plat vendu :</label>
+              <select name="recette_id" id="recette_id" class="form-select" required>
+                {% for recette in recettes %}
+                  <option value="{{ recette.id }}">{{ recette.nom }}</option>
+                {% endfor %}
+              </select>
+            </div>
 
-    <a href="/">⬅ Retour</a>
-</body>
+            <div class="mb-3">
+              <label for="quantite" class="form-label">Quantité :</label>
+              <input type="number" name="quantite" id="quantite" class="form-control" value="1" min="1" required>
+            </div>
+
+            <div class="text-end">
+              <button type="submit" class="btn btn-success">✅ Valider la vente</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">⬅ Retour à l'accueil</a>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
 </html>
