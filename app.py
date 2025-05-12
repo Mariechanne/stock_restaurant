@@ -6,6 +6,8 @@ from flask import Flask, Response, render_template, request, redirect, url_for, 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import func
+from flask import make_response
+from xhtml2pdf import pisa
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret")  # nécessaire pour flash()
@@ -60,6 +62,8 @@ class HistoriqueTransfert(db.Model):
     unite = db.Column(db.String(50), nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
     sens = db.Column(db.String(20), nullable=False)
+    # ✅ CECI MANQUE PROBABLEMENT :
+    ingredient = db.relationship('Ingredient', backref='transferts')
 
 with app.app_context():
     db.create_all()
@@ -89,8 +93,8 @@ def home():
         date_to=date_to
     )
 
-@app.route('/rapport/journalier')
-def rapport_journalier():
+@app.route('/rapport/journalier/pdf')
+def rapport_journalier_pdf():
     date_str = request.args.get('date', datetime.utcnow().date().isoformat())
     dt = datetime.fromisoformat(date_str)
     dt_next = dt + timedelta(days=1)
@@ -98,19 +102,18 @@ def rapport_journalier():
     ventes = Vente.query.filter(Vente.date >= dt, Vente.date < dt_next).all()
     transferts = HistoriqueTransfert.query.filter(HistoriqueTransfert.date >= dt, HistoriqueTransfert.date < dt_next).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output, delimiter=';')
-    writer.writerow(['Type', 'Date', 'Nom', 'Quantité', 'Unité', 'Sens éventuel'])
+    html = render_template('rapport_pdf.html', date=date_str, ventes=ventes, transferts=transferts)
 
-    for v in ventes:
-        writer.writerow(['Vente', v.date.strftime('%Y-%m-%d %H:%M'), v.recette.nom, v.quantite, '', ''])
-    for t in transferts:
-        sens = 'Mag→Cui' if t.sens == 'magasin_vers_cuisine' else 'Cui→Mag'
-        writer.writerow(['Transfert', t.date.strftime('%Y-%m-%d %H:%M'), t.ingredient.nom, t.quantite, t.unite, sens])
+    result = io.BytesIO()
+    pisa_status = pisa.CreatePDF(io.StringIO(html), dest=result)
 
-    output.seek(0)
-    filename = f"rapport_{date_str}.csv"
-    return Response(output, mimetype="text/csv", headers={"Content-disposition": f"attachment; filename={filename}"})
+    if pisa_status.err:
+        return f"Erreur de génération PDF : {pisa_status.err}", 500
+
+    response = make_response(result.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=rapport_{date_str}.pdf'
+    return response
 
 @app.route('/ajouter', methods=['GET', 'POST'])
 def ajouter():

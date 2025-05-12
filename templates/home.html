@@ -106,17 +106,17 @@
 
       <!-- Boutons de téléchargement -->
       <div class="text-end mt-4 mb-4">
-        <a href="{{ url_for('rapport_journalier', date=date_to) }}" class="btn btn-outline-success me-2">
+        <a href="{{ url_for('rapport_journalier_pdf', date=date_to) }}" class="btn btn-outline-success me-2">
           📥 CSV du {{ date_to }}
         </a>
-        <a href="{{ url_for('rapport_journalier', date=date_to) }}" class="btn btn-outline-primary">
+        <a href="{{ url_for('rapport_journalier_pdf', date=date_to) }}" class="btn btn-outline-primary">
           📄 PDF du {{ date_to }}
         </a>
       </div>
 
       <!-- Pied de page -->
       <footer class="text-center text-muted mt-5 mb-3">
-        <small>© 2025 Chandeste Stock Manager</small>
+        <small>© 2025 Lotus Stock Manager by Melvina</small>
       </footer>
 
     </div>
