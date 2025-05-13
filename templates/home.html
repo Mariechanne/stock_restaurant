@@ -156,84 +156,10 @@
     {% endif %}
 </div>
 
-<!-- Graphique -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Ventes par recette</h5>
-            <canvas id="salesChart" height="100"></canvas>
-        </div>
-    </div>
-
 <!-- Pied de page -->
 <footer>
     © {{ current_time.year }} Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
 </footer>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- Inclure Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- Canvas pour le graphique -->
-<canvas id="salesChart" width="600" height="400"></canvas>
-
-<script>
-    // Données récupérées depuis Flask via Jinja (sécurisé avec tojson)
-    const labels = {{ ventes_mois|map(attribute='recette.nom')|list|tojson }};
-    const data = {{ ventes_mois|map(attribute='quantite')|list|tojson }};
-
-    const ctx = document.getElementById('salesChart').getContext('2d');
-
-    const salesChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Quantité vendue',
-                data: data,
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Ventes du mois par recette'
-                },
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                tooltip: {
-                    enabled: true,
-                    callbacks: {
-                        label: function(context) {
-                            return `Quantité : ${context.parsed.y}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Quantité'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Recettes'
-                    }
-                }
-            }
-        }
-    });
-</script>
 
 <!-- Bootstrap Icons -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
