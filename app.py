@@ -72,15 +72,20 @@ with app.app_context():
 def home():
     date_to = request.args.get('date_to', datetime.utcnow().date().isoformat())
     date_from = request.args.get('date_from', (datetime.fromisoformat(date_to) - timedelta(days=30)).date().isoformat())
-    dt_from = datetime.fromisoformat(date_from)
-    dt_to = datetime.fromisoformat(date_to) + timedelta(days=1)
+    
+    # Heure de début et fin, par défaut : toute la journée
+    heure_debut = request.args.get('heure_debut', '00:00')
+    heure_fin = request.args.get('heure_fin', '23:59')
+
+    dt_from = datetime.fromisoformat(date_from + ' ' + heure_debut)
+    dt_to = datetime.fromisoformat(date_to + ' ' + heure_fin)
 
     count_ingredients = Ingredient.query.count()
     count_recettes = Recette.query.count()
     total_stock_cuisine = db.session.query(func.sum(Ingredient.stock_cuisine)).scalar() or 0
 
-    ventes_mois = Vente.query.filter(Vente.date >= dt_from, Vente.date < dt_to).all()
-    transferts_mois = HistoriqueTransfert.query.filter(HistoriqueTransfert.date >= dt_from, HistoriqueTransfert.date < dt_to).all()
+    ventes_mois = Vente.query.filter(Vente.date >= dt_from, Vente.date <= dt_to).all()
+    transferts_mois = HistoriqueTransfert.query.filter(HistoriqueTransfert.date >= dt_from, HistoriqueTransfert.date <= dt_to).all()
 
     return render_template('home.html',
         count_ingredients=count_ingredients,
@@ -90,19 +95,33 @@ def home():
         transferts_mois=transferts_mois,
         current_time=datetime.utcnow(),
         date_from=date_from,
-        date_to=date_to
+        date_to=date_to,
+        heure_debut=heure_debut,
+        heure_fin=heure_fin
     )
+
 
 @app.route('/rapport/journalier/pdf')
 def rapport_journalier_pdf():
     date_str = request.args.get('date', datetime.utcnow().date().isoformat())
-    dt = datetime.fromisoformat(date_str)
-    dt_next = dt + timedelta(days=1)
+    heure_debut = request.args.get('heure_debut', '00:00')
+    heure_fin = request.args.get('heure_fin', '23:59')
 
-    ventes = Vente.query.filter(Vente.date >= dt, Vente.date < dt_next).all()
-    transferts = HistoriqueTransfert.query.filter(HistoriqueTransfert.date >= dt, HistoriqueTransfert.date < dt_next).all()
+    # Fusion date + heure
+    dt_debut = datetime.fromisoformat(f"{date_str} {heure_debut}")
+    dt_fin = datetime.fromisoformat(f"{date_str} {heure_fin}")
 
-    html = render_template('rapport_pdf.html', date=date_str, ventes=ventes, transferts=transferts)
+    ventes = Vente.query.filter(Vente.date >= dt_debut, Vente.date <= dt_fin).all()
+    transferts = HistoriqueTransfert.query.filter(HistoriqueTransfert.date >= dt_debut, HistoriqueTransfert.date <= dt_fin).all()
+
+    html = render_template(
+        'rapport_pdf.html',
+        date=date_str,
+        heure_debut=heure_debut,
+        heure_fin=heure_fin,
+        ventes=ventes,
+        transferts=transferts
+    )
 
     result = io.BytesIO()
     pisa_status = pisa.CreatePDF(io.StringIO(html), dest=result)
@@ -112,7 +131,7 @@ def rapport_journalier_pdf():
 
     response = make_response(result.getvalue())
     response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'attachment; filename=rapport_{date_str}.pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=rapport_{date_str}_{heure_debut}_{heure_fin}.pdf'
     return response
 
 @app.route('/ajouter', methods=['GET', 'POST'])
@@ -127,7 +146,7 @@ def ajouter():
             nouveau = Ingredient(nom=nom, unite=unite, stock_magasin=stock_magasin, stock_cuisine=stock_cuisine)
             db.session.add(nouveau)
             db.session.commit()
-            return redirect(url_for('home'))
+            return redirect(url_for('ajouter_ingredient'))
 
         except Exception as e:
             db.session.rollback()
@@ -142,14 +161,14 @@ def modifier(id):
     ingr.stock_cuisine = float(request.form.get('stock_cuisine', ingr.stock_cuisine))
     ingr.stock_magasin = float(request.form.get('stock_magasin', ingr.stock_magasin))
     db.session.commit()
-    return redirect(url_for('home'))
+    return redirect(url_for('ajouter'))
 
 @app.route('/supprimer/<int:id>', methods=['POST'])
 def supprimer(id):
     ingr = Ingredient.query.get_or_404(id)
     db.session.delete(ingr)
     db.session.commit()
-    return redirect(url_for('home'))
+    return redirect(url_for('ajouter'))
 
 @app.route('/recettes', methods=['GET', 'POST'])
 def recettes():
@@ -266,6 +285,10 @@ def transfert():
             flash(f"Erreur : {str(e)}", "error")
 
     return render_template('transfert.html', ingredients=ingredients, transferts=transferts)
+
+@app.context_processor
+def inject_request():
+    return dict(request=request)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)

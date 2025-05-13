@@ -7,3 +7,19 @@ body {
 h1 {
     color: #007BFF;
 }
+
+.nav-link {
+    border-radius: 20px;
+    padding: 8px 16px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-link:hover {
+    background-color: #444;
+    color: #ffc107 !important;
+}
+
+.nav-link.active {
+    background-color: #ffc107;
+    color: #212529 !important;
+}
