@@ -145,7 +145,7 @@ def ajouter():
             nouveau = Ingredient(nom=nom, unite=unite, stock_magasin=stock_magasin, stock_cuisine=stock_cuisine)
             db.session.add(nouveau)
             db.session.commit()
-            return redirect(url_for('ajouter_ingredient'))
+            return redirect(url_for('ajouter_ingredient'), current_time=datetime.utcnow())
 
         except Exception as e:
             db.session.rollback()
