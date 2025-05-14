@@ -62,7 +62,6 @@ class HistoriqueTransfert(db.Model):
     unite = db.Column(db.String(50), nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
     sens = db.Column(db.String(20), nullable=False)
-    # ✅ CECI MANQUE PROBABLEMENT :
     ingredient = db.relationship('Ingredient', backref='transferts')
 
 with app.app_context():
@@ -152,7 +151,7 @@ def ajouter():
             db.session.rollback()
             flash(f"Erreur lors de l'ajout : {e}", "error")
 
-    ingredients = Ingredient.query.all()
+    ingredients = Ingredient.query.order_by(Ingredient.nom.asc()).all()
     return render_template('ajouter.html', ingredients=ingredients)
 
 @app.route('/modifier/<int:id>', methods=['POST'])
@@ -188,7 +187,7 @@ def recettes():
         db.session.commit()
         return redirect(url_for('recettes'))
 
-    return render_template('recettes.html', ingredients=Ingredient.query.all(), recettes=Recette.query.all())
+    return render_template('recettes.html', ingredients = Ingredient.query.order_by(Ingredient.nom.asc()).all(), recettes=Recette.query.all())
 
 @app.route('/modifier_recette/<int:id>', methods=['GET', 'POST'])
 def modifier_recette(id):
@@ -210,7 +209,7 @@ def modifier_recette(id):
         return redirect(url_for('recettes'))
 
     quantites = {ri.ingredient_id: ri.quantite for ri in recette.ingredients}
-    return render_template('modifier_recette.html', recette=recette, ingredients=Ingredient.query.all(), quantites=quantites)
+    return render_template('modifier_recette.html', recette=recette, ingredients = Ingredient.query.order_by(Ingredient.nom.asc()).all(), quantites=quantites)
 
 @app.route('/recette/supprimer/<int:id>', methods=['POST'])
 def supprimer_recette(id):
@@ -247,7 +246,7 @@ def ventes():
 
 @app.route('/transfert', methods=['GET', 'POST'])
 def transfert():
-    ingredients = Ingredient.query.all()
+    ingredients = Ingredient.query.order_by(Ingredient.nom.asc()).all()
     transferts = HistoriqueTransfert.query.order_by(HistoriqueTransfert.date.desc()).all()
 
     if request.method == 'POST':

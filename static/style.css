@@ -1,25 +1,74 @@
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f2f2f2;
-    padding: 40px;
-    color: #333;
-}
-h1 {
-    color: #007BFF;
+    background-color: #f9f9f9;
+    font-family: 'Segoe UI', sans-serif;
 }
 
-.nav-link {
-    border-radius: 20px;
-    padding: 8px 16px;
-    transition: background-color 0.3s, color 0.3s;
+.navbar {
+    background-color: #1c1c2b !important;
 }
 
-.nav-link:hover {
-    background-color: #444;
-    color: #ffc107 !important;
+.card {
+    border-radius: 1rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    margin: 1rem; /* Ajout d'une marge pour éviter que les éléments collent aux bords sur mobile */
 }
 
-.nav-link.active {
-    background-color: #ffc107;
-    color: #212529 !important;
+.card-title {
+    font-weight: 600;
+}
+
+footer {
+    background-color: #f1f1f1;
+    border-top: 1px solid #ddd;
+    margin-top: 80px;
+    padding: 20px;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+/* Media Query pour les petits écrans (smartphones) */
+@media (max-width: 600px) {
+    .navbar {
+        padding: 10px; /* Réduire le padding de la navbar sur mobile */
+    }
+
+    .card {
+        margin: 0.5rem; /* Réduire la marge autour des cards */
+    }
+
+    footer {
+        font-size: 0.75rem; /* Réduire la taille de la police du footer sur mobile */
+        padding: 15px; /* Réduire l'espace du footer sur mobile */
+    }
+}
+
+/* Media Query pour les écrans moyens (tablettes) */
+@media (max-width: 900px) {
+    .navbar {
+        padding: 15px; /* Ajuster le padding de la navbar sur tablette */
+    }
+
+    .card {
+        margin: 1rem; /* Ajuster la marge autour des cards */
+    }
+
+    footer {
+        font-size: 0.8rem; /* Ajuster la taille de la police du footer sur tablette */
+        padding: 18px; /* Ajuster l'espace du footer sur tablette */
+    }
+}
+
+/* Media Query pour les grands écrans (ordinateurs de bureau) */
+@media (min-width: 1200px) {
+    .navbar {
+        padding: 20px; /* Plus d'espace pour la navbar sur desktop */
+    }
+
+    .card {
+        margin: 2rem; /* Plus d'espace autour des cards */
+    }
+
+    footer {
+        font-size: 0.9rem; /* Taille de police plus grande sur grand écran */
+    }
 }
