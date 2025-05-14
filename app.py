@@ -112,6 +112,7 @@ def rapport_journalier_pdf():
 
     ventes = Vente.query.filter(Vente.date >= dt_debut, Vente.date <= dt_fin).all()
     transferts = HistoriqueTransfert.query.filter(HistoriqueTransfert.date >= dt_debut, HistoriqueTransfert.date <= dt_fin).all()
+    ingredients = Ingredient.query.order_by(Ingredient.nom.asc()).all()
 
     html = render_template(
         'rapport_pdf.html',
@@ -119,7 +120,8 @@ def rapport_journalier_pdf():
         heure_debut=heure_debut,
         heure_fin=heure_fin,
         ventes=ventes,
-        transferts=transferts
+        transferts=transferts,
+        ingredients=ingredients
     )
 
     result = io.BytesIO()

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>Rapport du {{ date }}</title>
     <style>
@@ -10,10 +9,12 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #333; padding: 6px; text-align: left; }
         th { background-color: #f2f2f2; }
+        h2 { margin-top: 40px; }
     </style>
 </head>
 <body>
     <h1>Rapport du {{ date }} ({{ heure_debut }} - {{ heure_fin }})</h1>
+
     <h2>Ventes</h2>
     <table>
         <tr><th>Date</th><th>Recette</th><th>Quantité</th></tr>
@@ -23,6 +24,8 @@
             <td>{{ v.recette.nom }}</td>
             <td>{{ v.quantite }}</td>
         </tr>
+        {% else %}
+        <tr><td colspan="3">Aucune vente enregistrée.</td></tr>
         {% endfor %}
     </table>
 
@@ -36,6 +39,20 @@
             <td>{{ t.quantite }}</td>
             <td>{{ t.unite }}</td>
             <td>{{ 'Mag→Cui' if t.sens == 'magasin_vers_cuisine' else 'Cui→Mag' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Aucun transfert enregistré.</td></tr>
+        {% endfor %}
+    </table>
+
+    <h2>Stock en cuisine</h2>
+    <table>
+        <tr><th>Ingrédient</th><th>Quantité</th><th>Unité</th></tr>
+        {% for ingr in ingredients %}
+        <tr>
+            <td>{{ ingr.nom }}</td>
+            <td>{{ '%.2f'|format(ingr.stock_cuisine) }}</td>
+            <td>{{ ingr.unite }}</td>
         </tr>
         {% endfor %}
     </table>
