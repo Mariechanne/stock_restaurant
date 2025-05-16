@@ -1,66 +1,55 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>Dashboard - Gestion de Stock</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <title>Fiches Techniques – Gestion de Stock</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap + Icons + Animation -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #f9f9fb;
             font-family: 'Segoe UI', sans-serif;
         }
-
         .navbar {
-            background-color: #1c1c2b !important;
+            background-color: #1c1c2b;
         }
-
         .logo {
             max-height: 50px;
-           
         }
-
         .card {
             border-radius: 1rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-
         .card-title {
-            font-weight: 600;
+            font-weight: bold;
         }
-
-        h2 {
-            margin-top: 40px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 5px;
-        }
-
         footer {
             background-color: #f1f1f1;
-            border-top: 1px solid #ddd;
             margin-top: 80px;
             padding: 20px;
             font-size: 0.85rem;
             color: #555;
             text-align: center;
         }
-
-        .btn-outline-dark {
-            border-radius: 30px;
-            padding: 10px 25px;
+        .form-check-input {
+            margin-top: 8px;
         }
-
-        .table-hover tbody tr:hover {
-            background-color: #f1f1f1;
+        .ingredient-selector {
+            display: none;
+        }
+        .ingredient-row {
+            display: none;
         }
     </style>
 </head>
 <body>
 
-<!-- Navigation -->
+<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg navbar-dark px-4">
     <a class="navbar-brand d-flex align-items-center" href="/">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo me-2">
@@ -87,84 +76,138 @@
     </div>
 </nav>
 
+<!-- CONTENU -->
 <div class="container mt-5">
-  <h1 class="text-center page-title mb-4">📋 Fiches Techniques</h1>
+    <h1 class="text-center mb-5">📋 Fiches Techniques</h1>
 
-  <!-- Formulaire de création de recette -->
-  <div class="card mb-5 mx-auto" style="max-width: 700px;">
-    <div class="card-header bg-success text-white">Créer une nouvelle recette</div>
-    <div class="card-body">
-      <form method="POST">
-        <div class="mb-3">
-          <label class="form-label">Nom de la recette :</label>
-          <input type="text" name="nom" class="form-control" required>
-        </div>
+    <!-- FORMULAIRE NOUVELLE RECETTE -->
+    <div class="card mb-5 mx-auto" style="max-width: 800px;">
+        <div class="card-header bg-success text-white">Créer une nouvelle recette</div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Nom de la recette :</label>
+                    <input type="text" name="nom" class="form-control" required>
+                </div>
 
-        <h5 class="mb-3">🧾 Ingrédients utilisés</h5>
-        {% for ingr in ingredients %}
-        <div class="row align-items-center mb-2">
-          <div class="col-auto">
-            <input type="checkbox" name="ingredient_id" value="{{ ingr.id }}">
-            <label class="ms-1">{{ ingr.nom }} ({{ ingr.unite }})</label>
-          </div>
-          <div class="col">
-            <input type="number" step="0.01" name="quantite" class="form-control" placeholder="Quantité">
-          </div>
-        </div>
-        {% endfor %}
+                <div class="mb-3">
+                    <button class="btn btn-outline-secondary" type="button" onclick="document.querySelector('.ingredient-selector').style.display = 'block'; this.style.display = 'none';">
+                        Ajouter des ingrédients
+                    </button>
+                </div>
 
-        <div class="text-end mt-4">
-          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Créer la recette</button>
+                <div class="ingredient-selector">
+                    <input type="text" id="searchIngredient" class="form-control mb-4" placeholder="Rechercher un ingrédient...">
+
+                    <h5 class="mb-3">🧾 Ingrédients utilisés</h5>
+                    {% for ingr in ingredients %}
+                    <div class="row align-items-center mb-2 ingredient-row">
+                        <div class="col-md-5">
+                            <div class="form-check">
+                                <input type="checkbox" name="ingredients[{{ ingr.id }}][checked]" value="1" class="form-check-input ingredient-checkbox" id="check{{ ingr.id }}">
+                                <label class="form-check-label" for="check{{ ingr.id }}">{{ ingr.nom }} ({{ ingr.unite }})</label>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <input type="number" step="0.01" name="ingredients[{{ ingr.id }}][quantite]" class="form-control quantity-input" placeholder="Quantité utilisée" style="display: none;">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Créer la recette
+                    </button>
+                </div>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
 
-  <!-- Liste des recettes -->
-  <div class="card">
-    <div class="card-header bg-secondary text-white">Recettes existantes</div>
-    <div class="card-body">
-      {% if recettes %}
-      <ul class="list-group">
-        {% for recette in recettes %}
-        <li class="list-group-item">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <strong class="fs-5">{{ recette.nom }}</strong>
-            <div>
-              <a href="{{ url_for('modifier_recette', id=recette.id) }}" class="btn btn-sm btn-outline-warning me-1">
-                <i class="fa-solid fa-pen-to-square"></i> Modifier
-              </a>
-              <form action="{{ url_for('supprimer_recette', id=recette.id) }}" method="POST" class="d-inline">
-                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer cette recette ?')">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </form>
+    <!-- LISTE DES RECETTES -->
+    <div class="mb-4">
+        <h2 class="mb-3">📚 Recettes existantes</h2>
+        <input type="text" id="searchRecette" class="form-control mb-4" placeholder="Rechercher une recette...">
+
+        {% if recettes %}
+        <div class="row">
+            {% for recette in recettes %}
+            <div class="col-md-6 col-lg-4 mb-4 recette-card">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title text-primary">{{ recette.nom }}</h6>
+                        <ul class="list-unstyled small mb-3">
+                            {% for ri in recette.ingredients %}
+                            <li><i class="bi bi-dot text-secondary"></i> {{ ri.ingredient.nom }} : <strong>{{ ri.quantite }} {{ ri.ingredient.unite }}</strong></li>
+                            {% endfor %}
+                        </ul>
+                        <div class="mt-auto">
+                            <a href="{{ url_for('modifier_recette', id=recette.id) }}" class="btn btn-sm btn-outline-warning me-2 mb-1 w-100">
+                                <i class="bi bi-pencil-square"></i> Modifier
+                            </a>
+                            <form action="{{ url_for('supprimer_recette', id=recette.id) }}" method="POST" class="d-inline w-100 mb-1">
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Supprimer cette recette ?')">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                            </form>
+                            <form action="{{ url_for('dupliquer_recette', id=recette.id) }}" method="POST" class="d-inline w-100">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary w-100">
+                                    <i class="bi bi-files"></i> Dupliquer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-          <ul class="list-unstyled ps-3 mb-0">
-            {% for ri in recette.ingredients %}
-            <li><i class="fa-solid fa-circle-dot text-secondary me-1"></i> {{ ri.ingredient.nom }} : <strong>{{ ri.quantite }} {{ ri.ingredient.unite }}</strong></li>
             {% endfor %}
-          </ul>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="text-muted">Aucune recette enregistrée.</p>
-      {% endif %}
+        </div>
+        {% else %}
+        <p class="text-muted">Aucune recette enregistrée.</p>
+        {% endif %}
     </div>
-  </div>
 
-  <!-- Bouton Retour -->
-  <div class="text-center mt-4">
-    <a href="{{ url_for('home') }}" class="btn btn-outline-dark">← Retour à l'accueil</a>
-  </div>
+    <!-- Bouton retour -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('home') }}" class="btn btn-outline-dark">
+            <i class="bi bi-arrow-left-circle"></i> Retour à l'accueil
+        </a>
+    </div>
 </div>
 
-  <footer>
+<!-- FOOTER -->
+<footer>
     © 2025 Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
-  </footer>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.querySelectorAll('.ingredient-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const row = cb.closest('.ingredient-row');
+            const quantityInput = row.querySelector('.quantity-input');
+            quantityInput.style.display = cb.checked ? 'block' : 'none';
+            row.style.display = cb.checked ? 'flex' : 'none';
+        });
+    });
+
+    document.getElementById('searchIngredient').addEventListener('input', function () {
+        const value = this.value.toLowerCase();
+        document.querySelectorAll('.ingredient-row').forEach(row => {
+            const checkbox = row.querySelector('.ingredient-checkbox');
+            if (!checkbox.checked && row.textContent.toLowerCase().includes(value)) {
+                row.style.display = 'flex';
+            } else if (!checkbox.checked) {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    document.getElementById('searchRecette').addEventListener('input', function () {
+        const value = this.value.toLowerCase();
+        document.querySelectorAll('.recette-card').forEach(card => {
+            card.style.display = card.textContent.toLowerCase().includes(value) ? 'block' : 'none';
+        });
+    });
+</script>
 </body>
 </html>

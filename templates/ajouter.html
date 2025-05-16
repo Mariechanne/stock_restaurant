@@ -1,182 +1,207 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
-    <title>Dashboard - Gestion de Stock</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .navbar {
-            background-color: #1c1c2b !important;
-        }
-
-        .logo {
-            max-height: 50px;
-           
-        }
-
-        .card {
-            border-radius: 1rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .card-title {
-            font-weight: 600;
-        }
-
-        h2 {
-            margin-top: 40px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 5px;
-        }
-
-        footer {
-            background-color: #f1f1f1;
-            border-top: 1px solid #ddd;
-            margin-top: 80px;
-            padding: 20px;
-            font-size: 0.85rem;
-            color: #555;
-            text-align: center;
-        }
-
-        .btn-outline-dark {
-            border-radius: 30px;
-            padding: 10px 25px;
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: #f1f1f1;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - Gestion de Stock</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .navbar {
+      background-color: #1c1c2b !important;
+    }
+    .logo {
+      max-height: 50px;
+    }
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    }
+    footer {
+      background-color: #f1f1f1;
+      border-top: 1px solid #ddd;
+      margin-top: 80px;
+      padding: 20px;
+      font-size: 0.85rem;
+      color: #555;
+      text-align: center;
+    }
+    .table-striped tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .pagination {
+      justify-content: center;
+    }
+  </style>
 </head>
 <body>
 
-<!-- Navigation -->
 <nav class="navbar navbar-expand-lg navbar-dark px-4">
-    <a class="navbar-brand d-flex align-items-center" href="/">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo me-2">
-        <span class="text-white fw-bold"></span>
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-            {% set nav_links = [
-                ('home', 'Accueil'),
-                ('ajouter', 'Ingrédients'),
-                ('recettes', 'Recettes'),
-                ('ventes', 'Ventes'),
-                ('transfert', 'Entrées')
-            ] %}
-            {% for endpoint, label in nav_links %}
-            <li class="nav-item">
-                <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}" href="{{ url_for(endpoint) }}">{{ label }}</a>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
+  <a class="navbar-brand d-flex align-items-center" href="/">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo me-2">
+    <span class="text-white fw-bold">Lotus Garden</span>
+  </a>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav ms-auto">
+      {% set nav_links = [
+        ('home', 'Accueil'),
+        ('ajouter', 'Ingrédients'),
+        ('recettes', 'Recettes'),
+        ('ventes', 'Ventes'),
+        ('transfert', 'Entrées')
+      ] %}
+      {% for endpoint, label in nav_links %}
+      <li class="nav-item">
+        <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}" href="{{ url_for(endpoint) }}">{{ label }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
 </nav>
 
-<!-- Contenu principal -->
 <div class="container mt-5">
 
-    <h1 class="text-center mb-4">➕ Ajouter un ingrédient</h1>
+  <h1 class="text-center mb-4">➕ Ajouter un ingrédient</h1>
 
-    <!-- Formulaire d'ajout -->
-    <div class="card shadow mb-5 mx-auto" style="max-width: 600px;">
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('ajouter') }}">
-                <div class="mb-3">
-                    <label class="form-label">Nom :</label>
-                    <input type="text" name="nom" class="form-control" placeholder="Ex : Tomate" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Unité :</label>
-                    <input type="text" name="unite" class="form-control" placeholder="Ex : kg, L..." required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Stock Magasin :</label>
-                    <input type="number" step="0.01" name="stock_magasin" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Stock Cuisine :</label>
-                    <input type="number" step="0.01" name="stock_cuisine" class="form-control">
-                </div>
-                <div class="text-end">
-                    <button type="submit" class="btn btn-success">Ajouter</button>
-                    <a href="{{ url_for('home') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
-                </div>
-            </form>
+  <div class="card shadow mb-5 mx-auto" style="max-width: 600px;">
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('ajouter') }}">
+        <div class="mb-3">
+          <label class="form-label">Nom :</label>
+          <input type="text" name="nom" class="form-control" required>
         </div>
-    </div>
-
-    <!-- Liste des ingrédients -->
-    <div class="card shadow">
-        <div class="card-header bg-secondary text-white">📋 Ingrédients existants (ordre alphabétique)</div>
-        <div class="card-body">
-            {% if ingredients %}
-            <div class="table-responsive">
-                <table class="table table-striped align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Nom</th>
-                            <th>Unité</th>
-                            <th>Stock Cuisine</th>
-                            <th>Stock Magasin</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for ingr in ingredients %}
-                        <tr>
-                            <td>{{ ingr.nom }}</td>
-                            <td>{{ ingr.unite }}</td>
-                            <td>{{ ingr.stock_cuisine }}</td>
-                            <td>{{ ingr.stock_magasin }}</td>
-                            <td class="text-end">
-                                <form method="POST" action="{{ url_for('modifier', id=ingr.id) }}" class="d-inline">
-                                    <div class="input-group input-group-sm" style="max-width: 200px;">
-                                        <input type="number" name="stock_magasin" step="0.01" class="form-control" placeholder="Magasin" required>
-                                        <input type="number" name="stock_cuisine" step="0.01" class="form-control" placeholder="Cuisine" required>
-                                        <button class="btn btn-warning" type="submit" title="Modifier">✏</button>
-                                    </div>
-                                </form>
-                                <form method="POST" action="{{ url_for('supprimer', id=ingr.id) }}" class="d-inline ms-1">
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer {{ ingr.nom }} ?')">🗑</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p class="text-muted">Aucun ingrédient enregistré.</p>
-            {% endif %}
+        <div class="mb-3">
+          <label class="form-label">Unité :</label>
+          <input type="text" name="unite" class="form-control" required>
         </div>
+        <div class="mb-3">
+          <label class="form-label">Stock Magasin :</label>
+          <input type="number" step="0.01" name="stock_magasin" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Stock Cuisine :</label>
+          <input type="number" step="0.01" name="stock_cuisine" class="form-control">
+        </div>
+        <div class="text-end">
+          <button type="submit" class="btn btn-success">Ajouter</button>
+          <a href="{{ url_for('home') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- Retour -->
-    <div class="text-center mt-4">
-        <a href="{{ url_for('home') }}" class="btn btn-outline-primary">← Retour à l’accueil</a>
+  <div class="card shadow">
+    <div class="card-header bg-secondary text-white">📋 Ingrédients existants</div>
+    <div class="card-body">
+
+      <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Rechercher...">
+
+      {% if ingredients %}
+      <div class="table-responsive">
+        <table id="ingredientsTable" class="table table-striped align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Nom</th>
+              <th>Unité</th>
+              <th>Stock Cuisine</th>
+              <th>Stock Magasin</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ingredientsBody">
+            {% for ingr in ingredients %}
+            <tr>
+              <form method="POST" action="{{ url_for('modifier', id=ingr.id) }}">
+                <td><input name="nom" value="{{ ingr.nom }}" class="form-control form-control-sm" readonly></td>
+                <td><input name="unite" value="{{ ingr.unite }}" class="form-control form-control-sm" required></td>
+                <td><input name="stock_cuisine" type="number" step="0.01" value="{{ ingr.stock_cuisine }}" class="form-control form-control-sm" required></td>
+                <td><input name="stock_magasin" type="number" step="0.01" value="{{ ingr.stock_magasin }}" class="form-control form-control-sm" required></td>
+                <td class="text-end">
+                  <button class="btn btn-warning btn-sm" type="submit" title="Modifier">✏</button>
+                  <a href="{{ url_for('supprimer', id=ingr.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer {{ ingr.nom }} ?')">🗑</a>
+                </td>
+              </form>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <nav>
+        <ul id="pagination" class="pagination mt-4"></ul>
+      </nav>
+      {% else %}
+      <p class="text-muted">Aucun ingrédient enregistré.</p>
+      {% endif %}
     </div>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('home') }}" class="btn btn-outline-primary">← Retour à l’accueil</a>
+  </div>
+
 </div>
 
 <footer>
-   © 2025 Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
+  © 2025 Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const rowsPerPage = 10;
+let currentPage = 1;
+const table = document.getElementById("ingredientsTable");
+const tbody = document.getElementById("ingredientsBody");
+const searchInput = document.getElementById("searchInput");
+
+function updatePagination(filteredRows) {
+  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+  const pagination = document.getElementById("pagination");
+  pagination.innerHTML = "";
+
+  for (let i = 1; i <= totalPages; i++) {
+    const li = document.createElement("li");
+    li.className = "page-item" + (i === currentPage ? " active" : "");
+    li.innerHTML = `<button class="page-link">${i}</button>`;
+    li.addEventListener("click", () => {
+      currentPage = i;
+      showPage(filteredRows);
+      updatePagination(filteredRows);
+    });
+    pagination.appendChild(li);
+  }
+}
+
+function showPage(rows) {
+  const start = (currentPage - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  Array.from(rows).forEach((row, i) => {
+    row.style.display = (i >= start && i < end) ? "" : "none";
+  });
+}
+
+function filterAndPaginate() {
+  const filter = searchInput.value.toLowerCase();
+  const rows = tbody.querySelectorAll("tr");
+  const filteredRows = Array.from(rows).filter(row => {
+    const nom = row.querySelector('input[name="nom"]').value.toLowerCase();
+    const unite = row.querySelector('input[name="unite"]').value.toLowerCase();
+    return nom.includes(filter) || unite.includes(filter);
+  });
+
+  currentPage = 1;
+  showPage(filteredRows);
+  updatePagination(filteredRows);
+}
+
+searchInput.addEventListener("input", filterAndPaginate);
+window.addEventListener("load", filterAndPaginate);
+</script>
 </body>
 </html>
-

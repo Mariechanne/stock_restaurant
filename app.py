@@ -159,9 +159,20 @@ def ajouter():
 @app.route('/modifier/<int:id>', methods=['POST'])
 def modifier(id):
     ingr = Ingredient.query.get_or_404(id)
-    ingr.stock_cuisine = float(request.form.get('stock_cuisine', ingr.stock_cuisine))
-    ingr.stock_magasin = float(request.form.get('stock_magasin', ingr.stock_magasin))
+
+    # Récupération sécurisée des champs du formulaire
+    ingr.nom = request.form.get('nom', ingr.nom)
+    ingr.unite = request.form.get('unite', ingr.unite)
+
+    try:
+        ingr.stock_cuisine = float(request.form.get('stock_cuisine', ingr.stock_cuisine))
+        ingr.stock_magasin = float(request.form.get('stock_magasin', ingr.stock_magasin))
+    except ValueError:
+        flash("Erreur : les valeurs de stock doivent être numériques.", "danger")
+        return redirect(url_for('ajouter'))
+
     db.session.commit()
+    flash("Ingrédient mis à jour avec succès !", "success")
     return redirect(url_for('ajouter'))
 
 @app.route('/supprimer/<int:id>', methods=['POST'])
@@ -218,6 +229,28 @@ def supprimer_recette(id):
     recette = Recette.query.get_or_404(id)
     db.session.delete(recette)
     db.session.commit()
+    return redirect(url_for('recettes'))
+
+@app.route('/recette/dupliquer/<int:id>', methods=['POST'])
+def dupliquer_recette(id):
+    recette_originale = Recette.query.get_or_404(id)
+    
+    # Nouveau nom basé sur l'original
+    nouveau_nom = f"{recette_originale.nom} (copie)"
+    nouvelle_recette = Recette(nom=nouveau_nom)
+    db.session.add(nouvelle_recette)
+    db.session.flush()  # Pour obtenir l'ID sans commit
+
+    for ingredient_assoc in recette_originale.ingredients:
+        copie_ingredient = RecetteIngredient(
+            recette_id=nouvelle_recette.id,
+            ingredient_id=ingredient_assoc.ingredient_id,
+            quantite=ingredient_assoc.quantite
+        )
+        db.session.add(copie_ingredient)
+
+    db.session.commit()
+    flash(f"Recette « {recette_originale.nom} » dupliquée avec succès.", "success")
     return redirect(url_for('recettes'))
 
 @app.route('/ventes', methods=['GET', 'POST'])
