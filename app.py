@@ -21,7 +21,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Modèles
+# ========================
+#        MODÈLES
+# ========================
+
 class Ingredient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nom = db.Column(db.String(100), nullable=False)
@@ -64,41 +67,611 @@ class HistoriqueTransfert(db.Model):
     sens = db.Column(db.String(20), nullable=False)
     ingredient = db.relationship('Ingredient', backref='transferts')
 
+# === GESTION DU BAR ===
+
+class Caissier(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nom = db.Column(db.String(100), nullable=False)
+
+class Boisson(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nom = db.Column(db.String(100), nullable=False)
+    prix_unitaire = db.Column(db.Float, nullable=False, default=0.0)
+
+class PointageBar(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    caissier = db.Column(db.String(100), nullable=False)
+
+    boisson_id = db.Column(db.Integer, db.ForeignKey('boisson.id'), nullable=False)
+    boisson = db.relationship('Boisson')
+
+    stock_initial = db.Column(db.Float, default=0.0)
+    entrees = db.Column(db.Float, default=0.0)
+    stock_final = db.Column(db.Float, default=0.0)
+    montant_verse = db.Column(db.Float, default=0.0)
+
+    @property
+    def quantite_vendue(self):
+        return max(0.0, self.stock_initial + self.entrees - self.stock_final)
+
+    @property
+    def montant(self):
+        return round(self.quantite_vendue * self.boisson.prix_unitaire, 2)
+
+    @property
+    def balance(self):
+        return round(self.montant - self.montant_verse, 2)
+
+# Ventes de boissons (si utilisées ailleurs)
+class VenteBoisson(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    boisson_id = db.Column(db.Integer, db.ForeignKey('boisson.id'), nullable=False)
+    caissier_id = db.Column(db.Integer, db.ForeignKey('caissier.id'), nullable=False)
+    quantite = db.Column(db.Float, nullable=False, default=0.0)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    boisson = db.relationship('Boisson')
+    caissier = db.relationship('Caissier')
+
+class BarPointage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)
+    caissier = db.Column(db.String(100), nullable=False)
+    produit = db.Column(db.String(100), nullable=False)
+    stock_initial = db.Column(db.Float, nullable=False, default=0)
+    entrees = db.Column(db.Float, nullable=False, default=0)
+    stock_final = db.Column(db.Float, nullable=False, default=0)
+    prix_unitaire = db.Column(db.Float, nullable=False, default=0)
+    @property
+    def quantite_vendue(self):
+        return (self.stock_initial + self.entrees - self.stock_final)
+    @property
+    def montant(self):
+        return self.quantite_vendue * self.prix_unitaire
+
+# Sessions de caisse (logique Excel : SI/ACHAT/SF → VENTE × P.U ; Réel vs Attendu)
+class SessionCaisse(db.Model):
+    __tablename__ = "session_caisse"
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)  # on enregistre la date de fin de période
+    caissier_id = db.Column(db.Integer, db.ForeignKey('caissier.id'), nullable=False)
+    montant_reel = db.Column(db.Float, nullable=False, default=0.0)
+    montant_attendu = db.Column(db.Float, nullable=False, default=0.0)
+    ecart = db.Column(db.Float, nullable=False, default=0.0)
+    caissier = db.relationship('Caissier')
+    lignes = db.relationship('SessionLigne', backref='session', cascade="all, delete-orphan")
+
+class SessionLigne(db.Model):
+    __tablename__ = "session_ligne"
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('session_caisse.id'), nullable=False)
+    boisson_id = db.Column(db.Integer, db.ForeignKey('boisson.id'), nullable=False)
+
+    stock_initial = db.Column(db.Float, nullable=False, default=0.0)  # SI
+    entrees = db.Column(db.Float, nullable=False, default=0.0)        # ACHAT (entrées)
+    stock_final = db.Column(db.Float, nullable=False, default=0.0)    # SF
+
+    prix_unitaire_snap = db.Column(db.Float, nullable=False, default=0.0)  # P.U “photo”
+    boisson = db.relationship('Boisson')
+
+    @property
+    def quantite_vendue(self):
+        return max(0.0, (self.stock_initial + self.entrees - self.stock_final))
+
+    @property
+    def montant_attendu_ligne(self):
+        return self.quantite_vendue * self.prix_unitaire_snap
+
+# Entrées (livraisons) quotidiennes de boissons
+class EntreeBoisson(db.Model):
+    __tablename__ = "entree_boisson"
+    id = db.Column(db.Integer, primary_key=True)
+    boisson_id = db.Column(db.Integer, db.ForeignKey('boisson.id'), nullable=False)
+    quantite = db.Column(db.Float, nullable=False, default=0.0)
+    date = db.Column(db.Date, nullable=False)  # date de la livraison/entrée
+    note = db.Column(db.String(200), nullable=True)
+    boisson = db.relationship('Boisson')
+
+    @staticmethod
+    def total_entrees_pour_date(boisson_id: int, date_pointage):
+        """Somme des entrées (livraisons) pour une boisson à la date donnée."""
+        q = db.session.query(func.coalesce(func.sum(EntreeBoisson.quantite), 0.0))\
+            .filter(EntreeBoisson.boisson_id == boisson_id,
+                    EntreeBoisson.date == date_pointage)
+        return float(q.scalar() or 0.0)
+
+    @staticmethod
+    def total_entrees_entre(boisson_id: int, date_debut, date_fin):
+        """Somme des entrées entre deux dates (inclusives)."""
+        q = db.session.query(func.coalesce(func.sum(EntreeBoisson.quantite), 0.0))\
+            .filter(EntreeBoisson.boisson_id == boisson_id,
+                    EntreeBoisson.date >= date_debut,
+                    EntreeBoisson.date <= date_fin)
+        return float(q.scalar() or 0.0)
+
+    @staticmethod
+    def dernier_stock_final_avant(boisson_id: int, date_pointage):
+        """Récupère le SF le plus récent AVANT cette date (pour chaîner SI)."""
+        l = (SessionLigne.query
+             .join(SessionCaisse, SessionLigne.session_id == SessionCaisse.id)
+             .filter(SessionLigne.boisson_id == boisson_id,
+                     SessionCaisse.date < date_pointage)
+             .order_by(SessionCaisse.date.desc(), SessionLigne.id.desc())
+             .first())
+        if l:
+            return float(l.stock_final or 0.0)
+        return 0.0
+
+# Crée les tables en local (pas d'Alembic nécessaire ici)
 with app.app_context():
     db.create_all()
 
+# ========================
+#         ROUTES
+# ========================
+
+@app.route('/bar', methods=['GET', 'POST'])
+def pointage_bar():
+    # Pour formulaires d’ajout & affichage
+    boissons = Boisson.query.order_by(Boisson.nom.asc()).all()
+    caissiers = Caissier.query.order_by(Caissier.nom.asc()).all()
+
+    if request.method == 'POST':
+        # --- Pointage de fin de service (session caisse sur PÉRIODE) ---
+        caissier_nom = (request.form.get('caissier') or '').strip()
+        montant_reel = request.form.get('montant_reel')
+
+        # Période
+        date_debut_str = request.form.get('date_debut')
+        date_fin_str   = request.form.get('date_fin')
+
+        if not caissier_nom or not date_debut_str or not date_fin_str or montant_reel in (None, ''):
+            flash("Caissier, période (du/au) et montant réel sont requis.", "danger")
+            return redirect(url_for('pointage_bar'))
+
+        try:
+            montant_reel = float(montant_reel)
+        except ValueError:
+            flash("Montant réel invalide.", "danger")
+            return redirect(url_for('pointage_bar'))
+
+        # Récupérer ou créer le caissier
+        caissier = Caissier.query.filter_by(nom=caissier_nom).first()
+        if not caissier:
+            caissier = Caissier(nom=caissier_nom)
+            db.session.add(caissier)
+            db.session.flush()
+
+        # Dates 'YYYY-MM-DD' -> date
+        try:
+            date_debut = datetime.fromisoformat(date_debut_str).date()
+            date_fin   = datetime.fromisoformat(date_fin_str).date()
+        except Exception:
+            flash("Dates invalides.", "danger")
+            return redirect(url_for('pointage_bar'))
+
+        if date_debut > date_fin:
+            flash("La date de début doit être avant ou égale à la date de fin.", "danger")
+            return redirect(url_for('pointage_bar'))
+
+        # On enregistre la session à la date de FIN (clôture de la période)
+        session = SessionCaisse(date=date_fin, caissier_id=caissier.id, montant_reel=montant_reel)
+        db.session.add(session)
+        db.session.flush()
+
+        # Lignes de pointage
+        boisson_ids = request.form.getlist('boisson_ids')
+        total_attendu = 0.0
+
+        for bid in boisson_ids:
+            try:
+                bid_int = int(bid)
+            except (TypeError, ValueError):
+                continue
+
+            # 1) SI auto : dernier SF AVANT le début de période (si non saisi)
+            si_raw = request.form.get(f"stock_initial_{bid_int}")
+            if si_raw not in (None, ''):
+                try:
+                    si = float(si_raw)
+                except ValueError:
+                    si = 0.0
+            else:
+                si = EntreeBoisson.dernier_stock_final_avant(bid_int, date_debut)
+
+            # 2) ACHAT auto : somme des entrées sur [date_debut, date_fin] si non saisi
+            ach_raw = request.form.get(f"entrees_{bid_int}")
+            if ach_raw not in (None, ''):
+                try:
+                    ach = float(ach_raw)
+                except ValueError:
+                    ach = 0.0
+            else:
+                ach = EntreeBoisson.total_entrees_entre(bid_int, date_debut, date_fin)
+
+            # 3) SF : tel que saisi (sinon 0) — SF à la CLÔTURE de période
+            sf_raw = request.form.get(f"stock_final_{bid_int}")
+            try:
+                sf = float(sf_raw) if (sf_raw not in (None, '',)) else 0.0
+            except ValueError:
+                sf = 0.0
+
+            boisson = Boisson.query.get(bid_int)
+            prix_snap = boisson.prix_unitaire if boisson else 0.0
+
+            ligne = SessionLigne(
+                session_id=session.id,
+                boisson_id=bid_int,
+                stock_initial=si,
+                entrees=ach,
+                stock_final=sf,
+                prix_unitaire_snap=prix_snap
+            )
+            db.session.add(ligne)
+            total_attendu += ligne.montant_attendu_ligne
+
+        session.montant_attendu = total_attendu
+        session.ecart = session.montant_reel - total_attendu
+
+        db.session.commit()
+        flash(
+            f"Pointage enregistré (période {date_debut} → {date_fin}). "
+            f"Attendu: {session.montant_attendu:.0f} F | "
+            f"Réel: {session.montant_reel:.0f} F | "
+            f"Écart: {session.ecart:.0f} F",
+            "success"
+        )
+        return redirect(url_for('pointage_bar'))
+
+    # ------- GET : filtres & rendu -------
+    # Filtres pour l’ancien tableau “ventes filtrées” (si encore utilisé)
+    caissier_id = request.args.get('caissier_id', type=int)
+    date_debut = request.args.get('date_debut', default=str(datetime.utcnow().date()))
+    date_fin = request.args.get('date_fin', default=str(datetime.utcnow().date()))
+
+    debut = datetime.fromisoformat(date_debut + ' 00:00')
+    fin = datetime.fromisoformat(date_fin + ' 23:59')
+
+    requete = VenteBoisson.query.filter(VenteBoisson.date >= debut, VenteBoisson.date <= fin)
+    if caissier_id:
+        requete = requete.filter(VenteBoisson.caissier_id == caissier_id)
+    ventes_filtrees = requete.all()
+
+    # Historique des sessions (bar)
+    sessions = SessionCaisse.query.order_by(SessionCaisse.date.desc()).limit(100).all()
+
+    return render_template(
+        'bar.html',
+        boissons=boissons,
+        caissiers=caissiers,
+        ventes=ventes_filtrees,
+        caissier_id=caissier_id,
+        date_debut=date_debut,
+        date_fin=date_fin,
+        sessions=sessions
+    )
+
+# --- CRUD boissons (bar) ---
+@app.route('/bar/boisson', methods=['POST'])
+def ajouter_boisson():
+    nom = request.form['nom']
+    prix = float(request.form['prix'])
+    boisson = Boisson(nom=nom, prix_unitaire=prix)
+    db.session.add(boisson)
+    db.session.commit()
+    return redirect(url_for('pointage_bar'))
+
+@app.route('/bar/boisson/modifier/<int:id>', methods=['POST'])
+def modifier_boisson(id):
+    boisson = Boisson.query.get_or_404(id)
+    boisson.nom = request.form['nom']
+    boisson.prix_unitaire = float(request.form['prix_unitaire'])
+    db.session.commit()
+    return redirect(url_for('pointage_bar'))
+
+@app.route('/bar/boisson/supprimer/<int:id>', methods=['POST'])
+def supprimer_boisson(id):
+    boisson = Boisson.query.get_or_404(id)
+    db.session.delete(boisson)
+    db.session.commit()
+    return redirect(url_for('pointage_bar'))
+
+# --- NOUVELLE PAGE : Livraisons / Entrées de boissons ---
+@app.route('/bar/entrees', methods=['GET', 'POST'])
+def entrees_boissons():
+    boissons = Boisson.query.order_by(Boisson.nom.asc()).all()
+
+    # --- Enregistrement d'une livraison ---
+    if request.method == 'POST':
+        date_str = request.form.get('date')
+        boisson_id = request.form.get('boisson_id', type=int)
+        quantite = request.form.get('quantite')
+        note = (request.form.get('note') or '').strip()
+
+        if not date_str or not boisson_id or quantite in (None, ''):
+            flash("Date, boisson et quantité sont requis.", "danger")
+            return redirect(url_for('entrees_boissons'))
+
+        try:
+            qte = float(quantite)
+        except ValueError:
+            flash("Quantité invalide.", "danger")
+            return redirect(url_for('entrees_boissons'))
+
+        try:
+            date_liv = datetime.fromisoformat(date_str).date()
+        except Exception:
+            flash("Date invalide.", "danger")
+            return redirect(url_for('entrees_boissons'))
+
+        db.session.add(EntreeBoisson(
+            boisson_id=boisson_id,
+            quantite=qte,
+            date=date_liv,
+            note=note
+        ))
+        db.session.commit()
+        flash("Entrée enregistrée.", "success")
+        return redirect(url_for('entrees_boissons'))
+
+    # --- Filtres GET ---
+    boisson_id_f = request.args.get('boisson_id', type=int)
+    date_debut_str = request.args.get('date_debut', '')
+    date_fin_str   = request.args.get('date_fin', '')
+
+    # Construire requête filtrée
+    q = EntreeBoisson.query
+
+    # Période
+    try:
+        if date_debut_str:
+            d_deb = datetime.fromisoformat(date_debut_str).date()
+            q = q.filter(EntreeBoisson.date >= d_deb)
+    except Exception:
+        flash("Date de début invalide.", "warning")
+
+    try:
+        if date_fin_str:
+            d_fin = datetime.fromisoformat(date_fin_str).date()
+            q = q.filter(EntreeBoisson.date <= d_fin)
+    except Exception:
+        flash("Date de fin invalide.", "warning")
+
+    # Boisson
+    if boisson_id_f:
+        q = q.filter(EntreeBoisson.boisson_id == boisson_id_f)
+
+    # Résultats
+    q = q.order_by(EntreeBoisson.date.desc(), EntreeBoisson.id.desc())
+    recent = q.limit(200).all()
+
+    # Total filtré
+    total_filtre = (db.session.query(func.coalesce(func.sum(EntreeBoisson.quantite), 0.0))
+                    .filter(*(q._criterion,) if getattr(q, "_criterion", None) is not None else [])
+                    .scalar() if getattr(q, "_criterion", None) is not None else
+                    db.session.query(func.coalesce(func.sum(EntreeBoisson.quantite), 0.0)).scalar())
+    total_filtre = float(total_filtre or 0.0)
+
+    return render_template(
+        'entrees.html',
+        boissons=boissons,
+        recent=recent,
+        boisson_id_f=boisson_id_f,
+        date_debut=date_debut_str,
+        date_fin=date_fin_str,
+        total_filtre=total_filtre
+    )
+
+# --- Accueil / Rapports / Cuisine ---
+
+from flask import make_response  # déjà importé chez toi
+
 @app.route('/')
 def home():
+    # Période par défaut : les 30 derniers jours, journée entière
     date_to = request.args.get('date_to', datetime.utcnow().date().isoformat())
-    date_from = request.args.get('date_from', (datetime.fromisoformat(date_to) - timedelta(days=30)).date().isoformat())
-    
-    # Heure de début et fin, par défaut : toute la journée
+    date_from = request.args.get(
+        'date_from',
+        (datetime.fromisoformat(date_to) - timedelta(days=30)).date().isoformat()
+    )
     heure_debut = request.args.get('heure_debut', '00:00')
     heure_fin = request.args.get('heure_fin', '23:59')
 
-    dt_from = datetime.fromisoformat(date_from + ' ' + heure_debut)
-    dt_to = datetime.fromisoformat(date_to + ' ' + heure_fin)
+    # Fenêtre temporelle pour VENTES (cuisine) : datetimes
+    dt_from = datetime.fromisoformat(f"{date_from} {heure_debut}")
+    dt_to   = datetime.fromisoformat(f"{date_to} {heure_fin}")
 
+    # ---- KPIs globaux (existant) ----
     count_ingredients = Ingredient.query.count()
     count_recettes = Recette.query.count()
     total_stock_cuisine = db.session.query(func.sum(Ingredient.stock_cuisine)).scalar() or 0
 
+    # ---- Vue CUISINE : top plats vendus (quantités) ----
+    # SUM(Vente.quantite) groupé par recette dans la fenêtre [dt_from, dt_to]
+    top_recettes = (
+        db.session.query(
+            Recette.nom.label('recette'),
+            func.coalesce(func.sum(Vente.quantite), 0).label('qte')
+        )
+        .join(Recette, Recette.id == Vente.recette_id)
+        .filter(Vente.date >= dt_from, Vente.date <= dt_to)
+        .group_by(Recette.nom)
+        .order_by(func.coalesce(func.sum(Vente.quantite), 0).desc())
+        .all()
+    )
+    # Transforme en listes simples pour le graph/table
+    recettes_labels = [r.recette for r in top_recettes]
+    recettes_qtes = [float(r.qte or 0) for r in top_recettes]
+
+    # ---- Vue CAISSE (BAR) : top boissons vendues ----
+    # On somme (SI + ACHAT - SF) par boisson sur la période, côté SessionCaisse.date
+    top_boissons = (
+        db.session.query(
+            Boisson.nom.label('boisson'),
+            func.coalesce(func.sum(SessionLigne.stock_initial + SessionLigne.entrees - SessionLigne.stock_final), 0).label('qte_vendue'),
+            func.coalesce(func.sum((SessionLigne.stock_initial + SessionLigne.entrees - SessionLigne.stock_final) * SessionLigne.prix_unitaire_snap), 0).label('montant')
+        )
+        .join(SessionCaisse, SessionCaisse.id == SessionLigne.session_id)
+        .join(Boisson, Boisson.id == SessionLigne.boisson_id)
+        .filter(SessionCaisse.date >= datetime.fromisoformat(date_from).date(),
+                SessionCaisse.date <= datetime.fromisoformat(date_to).date())
+        .group_by(Boisson.nom)
+        .order_by(func.coalesce(func.sum(SessionLigne.stock_initial + SessionLigne.entrees - SessionLigne.stock_final), 0).desc())
+        .all()
+    )
+    boissons_labels = [b.boisson for b in top_boissons]
+    boissons_qtes = [float(b.qte_vendue or 0) for b in top_boissons]
+
+    # Données existantes si tu veux les réutiliser dans la page
     ventes_mois = Vente.query.filter(Vente.date >= dt_from, Vente.date <= dt_to).all()
     transferts_mois = HistoriqueTransfert.query.filter(HistoriqueTransfert.date >= dt_from, HistoriqueTransfert.date <= dt_to).all()
 
-    return render_template('home.html',
+    return render_template(
+        'home.html',
+        # Filtres
+        date_from=date_from, date_to=date_to,
+        heure_debut=heure_debut, heure_fin=heure_fin,
+        # KPIs globaux
         count_ingredients=count_ingredients,
         count_recettes=count_recettes,
         total_stock_cuisine=total_stock_cuisine,
+        # Cuisine (plats)
+        recettes_labels=recettes_labels,
+        recettes_qtes=recettes_qtes,
+        top_recettes=top_recettes,
+        # Bar (boissons)
+        boissons_labels=boissons_labels,
+        boissons_qtes=boissons_qtes,
+        top_boissons=top_boissons,
+        # Données brutes (si besoin ailleurs)
         ventes_mois=ventes_mois,
         transferts_mois=transferts_mois,
-        current_time=datetime.utcnow(),
-        date_from=date_from,
-        date_to=date_to,
-        heure_debut=heure_debut,
-        heure_fin=heure_fin
+        current_time=datetime.utcnow()
     )
 
+
+@app.route('/export/cuisine.csv')
+def export_cuisine_csv():
+    """Export CSV du point Cuisine (ventes par recette) sur une période."""
+    date_to = request.args.get('date_to', datetime.utcnow().date().isoformat())
+    date_from = request.args.get(
+        'date_from',
+        (datetime.fromisoformat(date_to) - timedelta(days=30)).date().isoformat()
+    )
+    heure_debut = request.args.get('heure_debut', '00:00')
+    heure_fin = request.args.get('heure_fin', '23:59')
+
+    dt_from = datetime.fromisoformat(f"{date_from} {heure_debut}")
+    dt_to   = datetime.fromisoformat(f"{date_to} {heure_fin}")
+
+    rows = (
+        db.session.query(
+            Recette.nom.label('recette'),
+            func.coalesce(func.sum(Vente.quantite), 0).label('quantite')
+        )
+        .join(Recette, Recette.id == Vente.recette_id)
+        .filter(Vente.date >= dt_from, Vente.date <= dt_to)
+        .group_by(Recette.nom)
+        .order_by(func.coalesce(func.sum(Vente.quantite), 0).desc())
+        .all()
+    )
+
+    # Génération CSV en mémoire
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Recette", "Quantité vendue", "Période", "Heure début", "Heure fin"])
+    for r in rows:
+        writer.writerow([r.recette, int(r.quantite or 0), f"{date_from} -> {date_to}", heure_debut, heure_fin])
+
+    resp = make_response(output.getvalue())
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = f"attachment; filename=point_cuisine_{date_from}_to_{date_to}.csv"
+    return resp
+
+@app.route('/export/bar.csv')
+def export_bar_csv():
+    """
+    Export CSV des boissons les plus vendues sur une période.
+    Basé sur les sessions de caisse : somme (SI + ACHAT - SF) par boisson.
+    """
+    date_to = request.args.get('date_to', datetime.utcnow().date().isoformat())
+    date_from = request.args.get(
+        'date_from',
+        (datetime.fromisoformat(date_to) - timedelta(days=30)).date().isoformat()
+    )
+
+    # Agrégat sur SessionCaisse.date (par jour de clôture de période)
+    rows = (
+        db.session.query(
+            Boisson.nom.label('boisson'),
+            func.coalesce(func.sum(SessionLigne.stock_initial + SessionLigne.entrees - SessionLigne.stock_final), 0).label('quantite'),
+            func.coalesce(func.sum((SessionLigne.stock_initial + SessionLigne.entrees - SessionLigne.stock_final) * SessionLigne.prix_unitaire_snap), 0).label('montant')
+        )
+        .join(SessionCaisse, SessionCaisse.id == SessionLigne.session_id)
+        .join(Boisson, Boisson.id == SessionLigne.boisson_id)
+        .filter(SessionCaisse.date >= datetime.fromisoformat(date_from).date(),
+                SessionCaisse.date <= datetime.fromisoformat(date_to).date())
+        .group_by(Boisson.nom)
+        .order_by(func.coalesce(func.sum(SessionLigne.stock_initial + SessionLigne.entrees - SessionLigne.stock_final), 0).desc())
+        .all()
+    )
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Boisson", "Quantité vendue", "Montant (F)", "Période"])
+    for r in rows:
+        writer.writerow([r.boisson, f"{float(r.quantite or 0):.2f}", f"{float(r.montant or 0):.2f}", f"{date_from} -> {date_to}"])
+
+    resp = make_response(output.getvalue())
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = f"attachment; filename=point_boissons_{date_from}_to_{date_to}.csv"
+    return resp
+
+
+@app.route('/rapport/cuisine_periode/pdf')
+def rapport_cuisine_periode_pdf():
+    """
+    PDF 'Point Cuisine – Période' : mêmes données que le journalier,
+    mais sur [date_from, date_to] avec heures.
+    Le nom de fichier reflète la période.
+    """
+    date_to = request.args.get('date_to', datetime.utcnow().date().isoformat())
+    date_from = request.args.get(
+        'date_from',
+        (datetime.fromisoformat(date_to) - timedelta(days=30)).date().isoformat()
+    )
+    heure_debut = request.args.get('heure_debut', '00:00')
+    heure_fin = request.args.get('heure_fin', '23:59')
+
+    dt_debut = datetime.fromisoformat(f"{date_from} {heure_debut}")
+    dt_fin   = datetime.fromisoformat(f"{date_to} {heure_fin}")
+
+    ventes = Vente.query.filter(Vente.date >= dt_debut, Vente.date <= dt_fin).all()
+    transferts = HistoriqueTransfert.query.filter(HistoriqueTransfert.date >= dt_debut, HistoriqueTransfert.date <= dt_fin).all()
+    ingredients = Ingredient.query.order_by(Ingredient.nom.asc()).all()
+
+    # On réutilise le template existant 'rapport_pdf.html'
+    # en passant un 'date' lisible (plage)
+    html = render_template(
+        'rapport_pdf.html',
+        date=f"{date_from} → {date_to}",
+        heure_debut=heure_debut,
+        heure_fin=heure_fin,
+        ventes=ventes,
+        transferts=transferts,
+        ingredients=ingredients
+    )
+
+    result = io.BytesIO()
+    pisa_status = pisa.CreatePDF(io.StringIO(html), dest=result)
+    if pisa_status.err:
+        return f"Erreur de génération PDF : {pisa_status.err}", 500
+
+    fname = f"point_cuisine_{date_from}_{heure_debut.replace(':','')}_to_{date_to}_{heure_fin.replace(':','')}.pdf"
+    response = make_response(result.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename={fname}'
+    return response
 
 @app.route('/rapport/journalier/pdf')
 def rapport_journalier_pdf():
@@ -106,7 +679,6 @@ def rapport_journalier_pdf():
     heure_debut = request.args.get('heure_debut', '00:00')
     heure_fin = request.args.get('heure_fin', '23:59')
 
-    # Fusion date + heure
     dt_debut = datetime.fromisoformat(f"{date_str} {heure_debut}")
     dt_fin = datetime.fromisoformat(f"{date_str} {heure_fin}")
 
@@ -147,7 +719,7 @@ def ajouter():
             nouveau = Ingredient(nom=nom, unite=unite, stock_magasin=stock_magasin, stock_cuisine=stock_cuisine)
             db.session.add(nouveau)
             db.session.commit()
-            return redirect(url_for('ajouter_ingredient'), current_time=datetime.utcnow())
+            return redirect(url_for('ajouter'), current_time=datetime.utcnow())
 
         except Exception as e:
             db.session.rollback()
@@ -160,7 +732,6 @@ def ajouter():
 def modifier(id):
     ingr = Ingredient.query.get_or_404(id)
 
-    # Récupération sécurisée des champs du formulaire
     ingr.nom = request.form.get('nom', ingr.nom)
     ingr.unite = request.form.get('unite', ingr.unite)
 
@@ -194,9 +765,9 @@ def recettes():
         quantites = request.form.getlist('quantite')
 
         for i in range(len(ingredients_ids)):
-            qtés = quantites[i]
-            if qtés.strip():
-                db.session.add(RecetteIngredient(recette_id=recette.id, ingredient_id=int(ingredients_ids[i]), quantite=float(qtés)))
+            qtes = quantites[i]
+            if qtes.strip():
+                db.session.add(RecetteIngredient(recette_id=recette.id, ingredient_id=int(ingredients_ids[i]), quantite=float(qtes)))
         db.session.commit()
         return redirect(url_for('recettes'))
 
@@ -234,8 +805,6 @@ def supprimer_recette(id):
 @app.route('/recette/dupliquer/<int:id>', methods=['POST'])
 def dupliquer_recette(id):
     recette_originale = Recette.query.get_or_404(id)
-    
-    # Nouveau nom basé sur l'original
     nouveau_nom = f"{recette_originale.nom} (copie)"
     nouvelle_recette = Recette(nom=nouveau_nom)
     db.session.add(nouvelle_recette)

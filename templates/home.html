@@ -1,226 +1,325 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
-    <title>Dashboard - Gestion de Stock</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Dashboard - Gestion de Stock</title>
 
-        .navbar {
-            background-color: #1c1c2b !important;
-        }
+  <!-- UI libs -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-        .logo {
-            max-height: 50px;
-           
-        }
-
-        .card {
-            border-radius: 1rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .card-title {
-            font-weight: 600;
-        }
-
-        h2 {
-            margin-top: 40px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 5px;
-        }
-
-        footer {
-            background-color: #f1f1f1;
-            border-top: 1px solid #ddd;
-            margin-top: 80px;
-            padding: 20px;
-            font-size: 0.85rem;
-            color: #555;
-            text-align: center;
-        }
-
-        .btn-outline-dark {
-            border-radius: 30px;
-            padding: 10px 25px;
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: #f1f1f1;
-        }
-    </style>
+  <style>
+    :root{
+      --ink:#1c1c2b;
+      --soft:#f8f9fa;
+      --card-radius: 1rem;
+    }
+    body{ background:var(--soft); font-family:'Segoe UI',system-ui; }
+    .navbar{ background:var(--ink)!important; }
+    .logo{ max-height:50px; }
+    .card{ border-radius:var(--card-radius); box-shadow:0 6px 22px rgba(0,0,0,.06); }
+    .kpi .icon-wrap{
+      width:56px; height:56px; display:grid; place-items:center; border-radius:14px;
+      background:rgba(255,255,255,.15);
+    }
+    .kpi .value{ font-size:1.9rem; font-weight:800; letter-spacing:.3px; }
+    .toolbar .btn{ border-radius:999px; }
+    .toolbar .chip{ border-radius:999px; }
+    .section-title{
+      display:flex; align-items:center; gap:.5rem; margin: 32px 0 12px;
+      font-weight:700; letter-spacing:.2px;
+    }
+    .table-hover tbody tr:hover{ background:#f3f4f7; }
+    .muted{ color:#6c757d; }
+    .badge-round{ border-radius:999px; }
+    footer{ background:#f1f1f1; border-top:1px solid #e9ecef; padding:20px; font-size:.85rem; color:#555; text-align:center; }
+  </style>
 </head>
 <body>
 
-<!-- Navigation -->
+<!-- NAV -->
 <nav class="navbar navbar-expand-lg navbar-dark px-4">
-    <a class="navbar-brand d-flex align-items-center" href="/">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo me-2">
-        <span class="text-white fw-bold"></span>
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-            {% set nav_links = [
-                ('home', 'Accueil'),
-                ('ajouter', 'Ingrédients'),
-                ('recettes', 'Recettes'),
-                ('ventes', 'Ventes'),
-                ('transfert', 'Entrées')
-            ] %}
-            {% for endpoint, label in nav_links %}
-            <li class="nav-item">
-                <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}" href="{{ url_for(endpoint) }}">{{ label }}</a>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
+  <a class="navbar-brand d-flex align-items-center" href="/">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo me-2">
+    <span class="text-white fw-bold"></span>
+  </a>
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav ms-auto">
+      {% set nav_links = [
+        ('home', 'Accueil'),
+        ('ajouter', 'Ingrédients'),
+        ('recettes', 'Recettes'),
+        ('ventes', 'Ventes'),
+        ('transfert', 'Entrées (cuisine)'),
+        ('pointage_bar', 'Bar'),
+        ('entrees_boissons', 'Livraisons Bar')
+      ] %}
+      {% for endpoint, label in nav_links %}
+      <li class="nav-item">
+        <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}"
+           href="{{ url_for(endpoint) }}">{{ label }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
 </nav>
 
-<div class="container mt-4">
-    <h1 class="mb-4">Tableau de Bord</h1>
+<main class="container py-4">
 
-    <!-- Filtres -->
-    <form class="row g-2 mb-4" method="get">
+  <!-- HEADER + TOOLBAR -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+    <h1 class="m-0">Tableau de bord</h1>
+    <div class="toolbar d-flex flex-wrap align-items-center gap-2">
+      <!-- Quick ranges (facultatif côté UX : renvoie juste avec dates recalculées côté front si tu veux plus tard) -->
+      <span class="chip badge bg-light text-dark border"><i class="bi bi-calendar3 me-1"></i>Période : {{ date_from }} → {{ date_to }}</span>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('home', date_from=date_from, date_to=date_to, heure_debut='00:00', heure_fin='23:59') }}">
+        <i class="bi bi-clock-history me-1"></i> Journée complète
+      </a>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('rapport_cuisine_periode_pdf', date_from=date_from, date_to=date_to, heure_debut=heure_debut, heure_fin=heure_fin) }}">
+        <i class="bi bi-filetype-pdf me-1"></i> PDF — Point Cuisine (période)
+      </a>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('export_cuisine_csv', date_from=date_from, date_to=date_to, heure_debut=heure_debut, heure_fin=heure_fin) }}">
+        <i class="bi bi-download me-1"></i> CSV Cuisine
+      </a>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('export_bar_csv', date_from=date_from, date_to=date_to) }}">
+        <i class="bi bi-download me-1"></i> CSV Boissons
+      </a>
+    </div>
+  </div>
+
+  <!-- FILTRES -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form class="row g-3 align-items-end" method="get">
         <div class="col-md-3">
-            <label for="date_from" class="form-label">Du</label>
-            <input type="date" id="date_from" name="date_from" value="{{ date_from }}" class="form-control">
+          <label for="date_from" class="form-label">Du</label>
+          <input type="date" id="date_from" name="date_from" value="{{ date_from }}" class="form-control">
         </div>
         <div class="col-md-3">
-            <label for="date_to" class="form-label">Au</label>
-            <input type="date" id="date_to" name="date_to" value="{{ date_to }}" class="form-control">
+          <label for="date_to" class="form-label">Au</label>
+          <input type="date" id="date_to" name="date_to" value="{{ date_to }}" class="form-control">
         </div>
         <div class="col-md-2">
-            <label for="heure_debut" class="form-label">Heure début</label>
-            <input type="time" id="heure_debut" name="heure_debut" value="{{ heure_debut }}" class="form-control">
+          <label for="heure_debut" class="form-label">Heure début</label>
+          <input type="time" id="heure_debut" name="heure_debut" value="{{ heure_debut }}" class="form-control">
         </div>
         <div class="col-md-2">
-            <label for="heure_fin" class="form-label">Heure fin</label>
-            <input type="time" id="heure_fin" name="heure_fin" value="{{ heure_fin }}" class="form-control">
+          <label for="heure_fin" class="form-label">Heure fin</label>
+          <input type="time" id="heure_fin" name="heure_fin" value="{{ heure_fin }}" class="form-control">
         </div>
-        <div class="col-md-2 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i> Appliquer</button>
         </div>
-    </form>
+      </form>
+    </div>
+  </div>
 
-    <!-- Statistiques -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm text-white animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #3a3a59, #1c1c2b);">
-                <div class="card-body d-flex align-items-center">
-                    <i class="bi bi-basket-fill fs-1 me-3"></i>
-                    <div>
-                        <h6 class="mb-1 text-uppercase">Ingrédients</h6>
-                        <h3 class="fw-bold mb-0">{{ count_ingredients }}</h3>
-                    </div>
-                </div>
-            </div>
+  <!-- KPIs -->
+  <div class="row g-4 mb-2">
+    <div class="col-md-4">
+      <div class="card kpi text-white" style="background:linear-gradient(135deg,#3a3a59,#1c1c2b);">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="icon-wrap"><i class="bi bi-basket-fill fs-3"></i></div>
+          <div>
+            <div class="muted text-uppercase small">Ingrédients</div>
+            <div class="value">{{ count_ingredients }}</div>
+          </div>
         </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm text-white animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #2f6237, #1e3e24);">
-                <div class="card-body d-flex align-items-center">
-                    <i class="bi bi-book-fill fs-1 me-3"></i>
-                    <div>
-                        <h6 class="mb-1 text-uppercase">Recettes</h6>
-                        <h3 class="fw-bold mb-0">{{ count_recettes }}</h3>
-                    </div>
-                </div>
-            </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card kpi text-white" style="background:linear-gradient(135deg,#2f6237,#1e3e24);">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="icon-wrap"><i class="bi bi-book-fill fs-3"></i></div>
+          <div>
+            <div class="muted text-uppercase small">Recettes</div>
+            <div class="value">{{ count_recettes }}</div>
+          </div>
         </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm text-white animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #ffc107, #b28704);">
-                <div class="card-body d-flex align-items-center">
-                    <i class="bi bi-box-seam fs-1 me-3"></i>
-                    <div>
-                        <h6 class="mb-1 text-uppercase">Stock Cuisine</h6>
-                        <h3 class="fw-bold mb-0">{{ total_stock_cuisine }} unités</h3>
-                    </div>
-                </div>
-            </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card kpi text-white" style="background:linear-gradient(135deg,#ffc107,#b28704);">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="icon-wrap"><i class="bi bi-box-seam fs-3"></i></div>
+          <div>
+            <div class="muted text-uppercase small">Stock cuisine total</div>
+            <div class="value">{{ '%.0f'|format(total_stock_cuisine) }} <span class="fs-6 fw-normal">unités</span></div>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="row g-4">
+    <!-- Cuisine -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <span>🍽️ Cuisine — Plats les plus vendus</span>
+          <span class="badge bg-light text-dark border badge-round">Période {{ date_from }} → {{ date_to }} ({{ heure_debut }}–{{ heure_fin }})</span>
+        </div>
+        <div class="card-body">
+          {% if recettes_labels and recettes_labels|length > 0 %}
+            <canvas id="chartCuisine" height="190" aria-label="Graphique plats les plus vendus" role="img"></canvas>
+            <div class="table-responsive mt-3">
+              <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>Recette</th><th class="text-end">Quantité</th></tr></thead>
+                <tbody>
+                {% for r in top_recettes %}
+                  <tr><td>{{ r.recette }}</td><td class="text-end">{{ r.qte|int }}</td></tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">Aucune vente de plat sur cette période.</p>
+          {% endif %}
+        </div>
+      </div>
     </div>
 
-    <!-- Bouton PDF -->
-    <div class="text-end mt-4 mb-4">
-        <a href="{{ url_for('rapport_journalier_pdf', date=date_to) }}" class="btn btn-outline-dark">
-            📄 Télécharger PDF du {{ date_to }}
-        </a>
+    <!-- Bar -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+          <span>🍸 Caisse — Boissons les plus vendues</span>
+          <span class="badge bg-light text-dark border badge-round">Période {{ date_from }} → {{ date_to }}</span>
+        </div>
+        <div class="card-body">
+          {% if boissons_labels and boissons_labels|length > 0 %}
+            <canvas id="chartBoissons" height="190" aria-label="Graphique boissons les plus vendues" role="img"></canvas>
+            <div class="table-responsive mt-3">
+              <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>Boisson</th><th class="text-end">Quantité</th></tr></thead>
+                <tbody>
+                {% for b in top_boissons %}
+                  <tr><td>{{ b.boisson }}</td><td class="text-end">{{ '%.2f'|format(b.qte_vendue) }}</td></tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">Aucun pointage bar sur cette période.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DÉTAILS (accordéon) -->
+  <h2 class="section-title"><i class="bi bi-list-check"></i> Détails par période</h2>
+  <div class="accordion" id="detailsAccordion">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="hSales">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cSales" aria-expanded="true" aria-controls="cSales">
+          🛒 Ventes en cuisine
+        </button>
+      </h2>
+      <div id="cSales" class="accordion-collapse collapse show" aria-labelledby="hSales" data-bs-parent="#detailsAccordion">
+        <div class="accordion-body">
+          {% if ventes_mois %}
+            <div class="table-responsive">
+              <table class="table table-hover table-bordered border-light shadow-sm mt-2">
+                <thead class="table-light"><tr><th>Date</th><th>Recette</th><th class="text-end">Quantité</th></tr></thead>
+                <tbody>
+                {% for vente in ventes_mois %}
+                  <tr>
+                    <td>{{ vente.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ vente.recette.nom }}</td>
+                    <td class="text-end">{{ vente.quantite }}</td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <span class="text-muted">Aucune vente enregistrée.</span>
+          {% endif %}
+        </div>
+      </div>
     </div>
 
-    <!-- Ventes -->
-    <h2>🛒 Ventes sur la période</h2>
-    {% if ventes_mois %}
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered border-light shadow-sm mt-3">
-                <thead class="table-light">
-                    <tr>
-                        <th>Date</th>
-                        <th>Recette</th>
-                        <th>Quantité</th>
-                    </tr>
-                </thead>
+    <div class="accordion-item mt-3">
+      <h2 class="accordion-header" id="hTransfers">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cTransfers" aria-expanded="false" aria-controls="cTransfers">
+          🔄 Entrées en cuisine (transferts)
+        </button>
+      </h2>
+      <div id="cTransfers" class="accordion-collapse collapse" aria-labelledby="hTransfers" data-bs-parent="#detailsAccordion">
+        <div class="accordion-body">
+          {% if transferts_mois %}
+            <div class="table-responsive">
+              <table class="table table-hover table-bordered border-light shadow-sm mt-2">
+                <thead class="table-light"><tr><th>Date</th><th>Ingrédient</th><th class="text-end">Quantité</th><th>Unité</th><th>Sens</th></tr></thead>
                 <tbody>
-                    {% for vente in ventes_mois %}
-                    <tr>
-                        <td>{{ vente.date.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>{{ vente.recette.nom }}</td>
-                        <td>{{ vente.quantite }}</td>
-                    </tr>
-                    {% endfor %}
+                {% for t in transferts_mois %}
+                  <tr>
+                    <td>{{ t.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ t.ingredient.nom }}</td>
+                    <td class="text-end">{{ t.quantite }}</td>
+                    <td>{{ t.unite }}</td>
+                    <td>{{ 'Magasin → Cuisine' if t.sens == 'magasin_vers_cuisine' else 'Cuisine → Magasin' }}</td>
+                  </tr>
+                {% endfor %}
                 </tbody>
-            </table>
+              </table>
+            </div>
+          {% else %}
+            <span class="text-muted">Aucun transfert enregistré.</span>
+          {% endif %}
         </div>
-    {% else %}
-        <p class="text-muted">Aucune vente enregistrée.</p>
-    {% endif %}
+      </div>
+    </div>
+  </div>
 
-    <!-- Transferts -->
-    <h2>🔄 Entrées en cuisine sur la période</h2>
-    {% if transferts_mois %}
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered border-light shadow-sm mt-3">
-                <thead class="table-light">
-                    <tr>
-                        <th>Date</th>
-                        <th>Ingrédient</th>
-                        <th>Quantité</th>
-                        <th>Unité</th>
-                        <th>Sens</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for t in transferts_mois %}
-                    <tr>
-                        <td>{{ t.date.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>{{ t.ingredient.nom }}</td>
-                        <td>{{ t.quantite }}</td>
-                        <td>{{ t.unite }}</td>
-                        <td>{{ 'Magasin → Cuisine' if t.sens == 'magasin_vers_cuisine' else 'Cuisine → Magasin' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <p class="text-muted">Aucun transfert enregistré.</p>
-    {% endif %}
-</div>
+</main>
 
-<!-- Pied de page -->
-<footer>
-    © {{ current_time.year }} Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
+<footer class="mt-5">
+  © {{ current_time.year }} Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
 </footer>
 
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Données injectées par app.py
+  const recettesLabels = {{ recettes_labels|tojson }};
+  const recettesQtes   = {{ recettes_qtes|tojson }};
+  const boissonsLabels = {{ boissons_labels|tojson }};
+  const boissonsQtes   = {{ boissons_qtes|tojson }};
+
+  // Chart: Cuisine
+  if (recettesLabels.length) {
+    new Chart(document.getElementById('chartCuisine').getContext('2d'), {
+      type: 'bar',
+      data: { labels: recettesLabels, datasets: [{ label:'Quantités vendues', data: recettesQtes }] },
+      options: {
+        maintainAspectRatio:false,
+        scales:{ y:{ beginAtZero:true }, x:{ ticks:{ autoSkip:false, maxRotation:45 } } },
+        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:(ctx)=> ctx.parsed.y } } }
+      }
+    });
+  }
+
+  // Chart: Bar
+  if (boissonsLabels.length) {
+    new Chart(document.getElementById('chartBoissons').getContext('2d'), {
+      type: 'bar',
+      data: { labels: boissonsLabels, datasets: [{ label:'Quantités vendues', data: boissonsQtes }] },
+      options: {
+        maintainAspectRatio:false,
+        scales:{ y:{ beginAtZero:true }, x:{ ticks:{ autoSkip:false, maxRotation:45 } } },
+        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:(ctx)=> ctx.parsed.y } } }
+      }
+    });
+  }
+</script>
 </body>
 </html>

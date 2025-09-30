@@ -62,29 +62,32 @@
 
 <!-- Navigation -->
 <nav class="navbar navbar-expand-lg navbar-dark px-4">
-    <a class="navbar-brand d-flex align-items-center" href="/">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo me-2">
-        <span class="text-white fw-bold"></span>
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-            {% set nav_links = [
-                ('home', 'Accueil'),
-                ('ajouter', 'Ingrédients'),
-                ('recettes', 'Recettes'),
-                ('ventes', 'Ventes'),
-                ('transfert', 'Entrées')
-            ] %}
-            {% for endpoint, label in nav_links %}
-            <li class="nav-item">
-                <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}" href="{{ url_for(endpoint) }}">{{ label }}</a>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
+  <a class="navbar-brand d-flex align-items-center" href="/">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo me-2">
+    <span class="text-white fw-bold"></span>
+  </a>
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav ms-auto">
+      {% set nav_links = [
+        ('home', 'Accueil'),
+        ('ajouter', 'Ingrédients'),
+        ('recettes', 'Recettes'),
+        ('ventes', 'Ventes'),
+        ('transfert', 'Entrées (cuisine)'),
+        ('pointage_bar', 'Bar'),
+        ('entrees_boissons', 'Livraisons Bar')
+      ] %}
+      {% for endpoint, label in nav_links %}
+      <li class="nav-item">
+        <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}"
+           href="{{ url_for(endpoint) }}">{{ label }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
 </nav>
 
   <head>

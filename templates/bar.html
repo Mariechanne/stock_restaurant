@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Dashboard - Gestion de Stock</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background-color: #1c1c2b !important; }
+        .logo { max-height: 50px; }
+        .card { border-radius: 1rem; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); }
+        .card-title { font-weight: 600; }
+        h2 { margin-top: 40px; margin-bottom: 15px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+        footer { background-color: #f1f1f1; border-top: 1px solid #ddd; margin-top: 80px; padding: 20px; font-size: 0.85rem; color: #555; text-align: center; }
+        .btn-outline-dark { border-radius: 30px; padding: 10px 25px; }
+        .table-hover tbody tr:hover { background-color: #f1f1f1; }
+        .badge-round { border-radius: 999px; }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark px-4">
+    <a class="navbar-brand d-flex align-items-center" href="/">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo me-2">
+        <span class="text-white fw-bold"></span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+            {% set nav_links = [
+                ('home', 'Accueil'),
+                ('ajouter', 'Ingrédients'),
+                ('recettes', 'Recettes'),
+                ('ventes', 'Ventes'),
+                ('transfert', 'Entrées (cuisine)'),
+                ('pointage_bar', 'Bar'),
+                ('entrees_boissons', 'Livraisons Bar')
+            ] %}
+            {% for endpoint, label in nav_links %}
+            <li class="nav-item">
+                <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}" href="{{ url_for(endpoint) }}">{{ label }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">🍸 Gestion Bar – Pointage Caisse</h1>
+
+    <!-- Formulaire ajout boisson -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">➕ Nouvelle boisson</div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('ajouter_boisson') }}">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" name="nom" class="form-control" placeholder="Nom de la boisson" required>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="number" step="0.01" name="prix" class="form-control" placeholder="Prix unitaire (F)" required>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-success w-100" type="submit">Ajouter</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Boissons existantes (édition prix / suppression) -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">🧃 Boissons enregistrées</div>
+        <div class="card-body">
+            {% if boissons %}
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nom</th>
+                        <th>Prix unitaire (F)</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in boissons %}
+                    <tr>
+                        <form method="POST" action="{{ url_for('modifier_boisson', id=b.id) }}">
+                            <td>
+                                <input type="text" name="nom" class="form-control" value="{{ b.nom }}" required>
+                            </td>
+                            <td>
+                                <input type="number" name="prix_unitaire" step="0.01" class="form-control" value="{{ b.prix_unitaire }}" required>
+                            </td>
+                            <td class="text-end">
+                                <button type="submit" class="btn btn-sm btn-outline-primary me-1">💾</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('supprimer_boisson', id=b.id) }}" onsubmit="return confirm('Supprimer cette boisson ?')" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">🗑</button>
+                        </form>
+                            </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">Aucune boisson enregistrée pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filtre pointages (ancien tableau ventes) -->
+    <h2 class="mb-4">🔍 Filtrer les pointages</h2>
+    <form method="get" class="row g-2 mb-4">
+        <div class="col-md-3">
+            <label class="form-label">Caissier :</label>
+            <select name="caissier_id" class="form-select">
+                <option value="">Tous les caissiers</option>
+                {% for c in caissiers %}
+                    <option value="{{ c.id }}" {% if caissier_id|int == c.id %}selected{% endif %}>{{ c.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Du :</label>
+            <input type="date" name="date_debut" class="form-control" value="{{ date_debut }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Au :</label>
+            <input type="date" name="date_fin" class="form-control" value="{{ date_fin }}">
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+        </div>
+    </form>
+
+    <h5 class="mt-4">📊 Ventes filtrées</h5>
+    <table class="table table-bordered table-striped mt-2">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Caissier</th>
+                <th>Boisson</th>
+                <th>Quantité</th>
+                <th>Total (F)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in ventes %}
+            <tr>
+                <td>{{ v.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ v.caissier.nom }}</td>
+                <td>{{ v.boisson.nom }}</td>
+                <td>{{ v.quantite }}</td>
+                <td class="text-end">{{ "%.2f"|format(v.quantite * v.boisson.prix_unitaire) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Formulaire pointage bar (session de caisse sur PÉRIODE) -->
+    <div class="card mb-5">
+        <div class="card-header bg-success text-white">📝 Nouveau pointage (session caisse — période)</div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('pointage_bar') }}">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label mb-1">Nom du caissier</label>
+                        <input type="text" name="caissier" class="form-control" placeholder="Nom du caissier" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label mb-1">Du</label>
+                        <input type="date" name="date_debut" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label mb-1">Au</label>
+                        <input type="date" name="date_fin" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label mb-1">Montant réel remis (F)</label>
+                        <input type="number" step="0.01" name="montant_reel" class="form-control" required>
+                    </div>
+                </div>
+
+                <!-- Lignes de pointage par boisson : SI / ACHAT / SF (VENTE calculée côté serveur) -->
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="min-width:220px">Boisson</th>
+                                <th class="text-center">SI</th>
+                                <th class="text-center">ACHAT (période)</th>
+                                <th class="text-center">SF</th>
+                                <th class="text-center">P.U (F)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for boisson in boissons %}
+                            <tr>
+                                <td>
+                                    <strong>{{ boisson.nom }}</strong>
+                                    <input type="hidden" name="boisson_ids" value="{{ boisson.id }}">
+                                </td>
+                                <td class="text-center" style="max-width:120px">
+                                    <input type="number" step="0.01" name="stock_initial_{{ boisson.id }}" class="form-control form-control-sm" placeholder="auto si vide">
+                                </td>
+                                <td class="text-center" style="max-width:140px">
+                                    <input type="number" step="0.01" name="entrees_{{ boisson.id }}" class="form-control form-control-sm" placeholder="auto si vide">
+                                </td>
+                                <td class="text-center" style="max-width:120px">
+                                    <input type="number" step="0.01" name="stock_final_{{ boisson.id }}" class="form-control form-control-sm" placeholder="0">
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border badge-round">{{ boisson.prix_unitaire }}</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="text-end mt-3">
+                    <button class="btn btn-primary">Valider le pointage</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Historique des sessions -->
+    <div class="card" id="sessions">
+        <div class="card-header bg-dark text-white">📘 Historique des sessions (Attendu / Réel / Écart)</div>
+        <div class="card-body">
+            {% if sessions and sessions|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:130px">Date (fin de période)</th>
+                            <th>Caissier</th>
+                            <th class="text-end">Attendu (F)</th>
+                            <th class="text-end">Réel (F)</th>
+                            <th class="text-end">Écart (F)</th>
+                            <th style="width:120px">Détails</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in sessions %}
+                        <tr class="{% if (s.ecart|round(0)) != 0 %}table-warning{% endif %}">
+                            <td>{{ s.date }}</td>
+                            <td>{{ s.caissier.nom }}</td>
+                            <td class="text-end">{{ '%.0f'|format(s.montant_attendu) }}</td>
+                            <td class="text-end">{{ '%.0f'|format(s.montant_reel) }}</td>
+                            <td class="text-end">{{ '%.0f'|format(s.ecart) }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#sess{{ s.id }}">
+                                    Voir lignes
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="collapse" id="sess{{ s.id }}">
+                            <td colspan="6">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Boisson</th>
+                                                <th class="text-center">SI</th>
+                                                <th class="text-center">ACHAT</th>
+                                                <th class="text-center">SF</th>
+                                                <th class="text-end">VENTE</th>
+                                                <th class="text-end">P.U (F)</th>
+                                                <th class="text-end">Montant (F)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for l in s.lignes %}
+                                            <tr>
+                                                <td>{{ l.boisson.nom }}</td>
+                                                <td class="text-center">{{ l.stock_initial|float }}</td>
+                                                <td class="text-center">{{ l.entrees|float }}</td>
+                                                <td class="text-center">{{ l.stock_final|float }}</td>
+                                                <td class="text-end">{{ '%.2f'|format(l.quantite_vendue) }}</td>
+                                                <td class="text-end">{{ '%.2f'|format(l.prix_unitaire_snap) }}</td>
+                                                <td class="text-end">{{ '%.2f'|format(l.montant_attendu_ligne) }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <p class="text-muted mb-0">Aucune session enregistrée pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Pied de page -->
+<footer>
+    © 2025 Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Auto : si on saisit "Du", proposer "Au" = +2 jours (période 3 jours), si vide
+  const debut = document.querySelector('input[name="date_debut"]');
+  const fin   = document.querySelector('input[name="date_fin"]');
+  if (!debut || !fin) return;
+  debut.addEventListener('change', () => {
+    if (debut.value && !fin.value) {
+      const d = new Date(debut.value);
+      d.setDate(d.getDate() + 2); // période 3 jours
+      fin.value = d.toISOString().slice(0,10);
+    }
+  });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+
+# Environnements
+.env
+.venv/
+venv/
+env/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Bases de données / artefacts locaux
+*.sqlite
+*.db
+stock.db
+UsersLPB LAPTOPstock_restaurantstock.db
+
+# Coverage / tests
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Autres
+*.swp
