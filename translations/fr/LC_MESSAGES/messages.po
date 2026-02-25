@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-25 13:54+0100\n"
+"POT-Creation-Date: 2026-02-25 15:41+0100\n"
 "PO-Revision-Date: 2026-02-25 14:03+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -47,7 +47,9 @@ msgstr "La date de début doit être avant ou égale à la date de fin."
 msgid ""
 "Pointage enregistré (période %(debut)s → %(fin)s). Attendu: %(att)s F | "
 "Réel: %(reel)s F | Écart: %(ecart)s F"
-msgstr "Pointage enregistré (période %(debut)s → %(fin)s). Attendu: %(att)s F | Réel: %(reel)s F | Écart: %(ecart)s F"
+msgstr ""
+"Pointage enregistré (période %(debut)s → %(fin)s). Attendu: %(att)s F | "
+"Réel: %(reel)s F | Écart: %(ecart)s F"
 
 #: app.py:429
 msgid "Date, boisson et quantité sont requis."
@@ -112,54 +114,124 @@ msgstr "Transfert effectué avec succès"
 msgid "Erreur : %(e)s"
 msgstr "Erreur : %(e)s"
 
-#: templates/bar.html:37 templates/entrees.html:33
-#: templates/modifier_recette.html:75 templates/recettes.html:64
-#: templates/transfert.html:75 templates/ventes.html:75
+#: templates/ajouter.html:55 templates/bar.html:37 templates/entrees.html:33
+#: templates/home.html:55 templates/modifier_recette.html:75
+#: templates/recettes.html:64 templates/transfert.html:75
+#: templates/ventes.html:75
 msgid "Accueil"
 msgstr "Accueil"
 
-#: templates/bar.html:38 templates/entrees.html:34
+#: templates/ajouter.html:56 templates/bar.html:38 templates/entrees.html:34
+#: templates/home.html:56 templates/home.html:141
 #: templates/modifier_recette.html:76 templates/modifier_recette.html:121
 #: templates/recettes.html:65 templates/transfert.html:76
 #: templates/ventes.html:76
 msgid "Ingrédients"
 msgstr "Ingrédients"
 
-#: templates/bar.html:39 templates/entrees.html:35
+#: templates/ajouter.html:57 templates/bar.html:39 templates/entrees.html:35
+#: templates/home.html:57 templates/home.html:152
 #: templates/modifier_recette.html:77 templates/recettes.html:66
 #: templates/transfert.html:77 templates/ventes.html:77
 msgid "Recettes"
 msgstr "Recettes"
 
-#: templates/bar.html:40 templates/entrees.html:36
-#: templates/modifier_recette.html:78 templates/recettes.html:67
-#: templates/transfert.html:78 templates/ventes.html:78
+#: templates/ajouter.html:58 templates/bar.html:40 templates/entrees.html:36
+#: templates/home.html:58 templates/modifier_recette.html:78
+#: templates/recettes.html:67 templates/transfert.html:78
+#: templates/ventes.html:78
 msgid "Ventes"
 msgstr "Ventes"
 
-#: templates/bar.html:41 templates/entrees.html:37
-#: templates/modifier_recette.html:79 templates/recettes.html:68
-#: templates/transfert.html:79 templates/ventes.html:79
+#: templates/ajouter.html:59 templates/bar.html:41 templates/entrees.html:37
+#: templates/home.html:59 templates/modifier_recette.html:79
+#: templates/recettes.html:68 templates/transfert.html:79
+#: templates/ventes.html:79
 msgid "Entrées (cuisine)"
 msgstr "Entrées (cuisine)"
 
-#: templates/bar.html:42 templates/entrees.html:38
-#: templates/modifier_recette.html:80 templates/recettes.html:69
-#: templates/transfert.html:80 templates/ventes.html:80
+#: templates/ajouter.html:60 templates/bar.html:42 templates/entrees.html:38
+#: templates/home.html:60 templates/modifier_recette.html:80
+#: templates/recettes.html:69 templates/transfert.html:80
+#: templates/ventes.html:80
 msgid "Bar"
 msgstr "Bar"
 
-#: templates/bar.html:43 templates/entrees.html:39
-#: templates/modifier_recette.html:81 templates/recettes.html:70
-#: templates/transfert.html:81 templates/ventes.html:81
+#: templates/ajouter.html:61 templates/bar.html:43 templates/entrees.html:39
+#: templates/home.html:61 templates/modifier_recette.html:81
+#: templates/recettes.html:70 templates/transfert.html:81
+#: templates/ventes.html:81
 msgid "Livraisons Bar"
 msgstr "Livraisons Bar"
 
-#: templates/bar.html:52 templates/entrees.html:49
-#: templates/modifier_recette.html:91 templates/recettes.html:80
-#: templates/transfert.html:91 templates/ventes.html:91
+#: templates/ajouter.html:71 templates/bar.html:52 templates/entrees.html:49
+#: templates/home.html:71 templates/modifier_recette.html:91
+#: templates/recettes.html:80 templates/transfert.html:91
+#: templates/ventes.html:91
 msgid "Déconnexion"
 msgstr "Déconnexion"
+
+#: templates/ajouter.html:86
+msgid "Ajouter un ingrédient"
+msgstr "Ajouter un ingrédient"
+
+#: templates/ajouter.html:92 templates/ajouter.html:130 templates/bar.html:96
+msgid "Nom"
+msgstr "Nom"
+
+#: templates/ajouter.html:96 templates/ajouter.html:131 templates/home.html:306
+#: templates/transfert.html:171
+msgid "Unité"
+msgstr "Unité"
+
+#: templates/ajouter.html:100 templates/ajouter.html:133
+msgid "Stock Magasin"
+msgstr "Stock Magasin"
+
+#: templates/ajouter.html:104 templates/ajouter.html:132
+msgid "Stock Cuisine"
+msgstr "Stock Cuisine"
+
+#: templates/ajouter.html:108
+msgid "Seuil d'alerte (optionnel)"
+msgstr "Seuil d'alerte (optionnel)"
+
+#: templates/ajouter.html:109
+msgid "Laisser vide si pas d'alerte"
+msgstr "Laisser vide si pas d'alerte"
+
+#: templates/ajouter.html:112 templates/bar.html:81
+msgid "Ajouter"
+msgstr "Ajouter"
+
+#: templates/ajouter.html:113
+msgid "Annuler"
+msgstr "Annuler"
+
+#: templates/ajouter.html:120
+msgid "Ingrédients existants"
+msgstr "Ingrédients existants"
+
+#: templates/ajouter.html:123
+msgid "Rechercher..."
+msgstr "Rechercher..."
+
+#: templates/ajouter.html:134
+msgid "Seuil alerte"
+msgstr "Seuil alerte"
+
+#: templates/ajouter.html:135 templates/bar.html:98
+msgid "Actions"
+msgstr "Actions"
+
+#: templates/ajouter.html:163
+msgid "Aucun ingrédient enregistré."
+msgstr "Aucun ingrédient enregistré."
+
+#: templates/ajouter.html:169 templates/transfert.html:215
+#: templates/ventes.html:143
+msgid "← Retour à l'accueil"
+msgstr "← Retour à l'accueil"
 
 #: templates/bar.html:66
 msgid "Gestion Bar – Pointage Caisse"
@@ -177,21 +249,9 @@ msgstr "Nom de la boisson"
 msgid "Prix unitaire (F)"
 msgstr "Prix unitaire (F)"
 
-#: templates/bar.html:81
-msgid "Ajouter"
-msgstr "Ajouter"
-
 #: templates/bar.html:90
 msgid "Boissons enregistrées"
 msgstr "Boissons enregistrées"
-
-#: templates/bar.html:96
-msgid "Nom"
-msgstr "Nom"
-
-#: templates/bar.html:98
-msgid "Actions"
-msgstr "Actions"
 
 #: templates/bar.html:123
 msgid "Aucune boisson enregistrée pour le moment."
@@ -210,10 +270,12 @@ msgid "Tous les caissiers"
 msgstr "Tous les caissiers"
 
 #: templates/bar.html:141 templates/bar.html:188 templates/entrees.html:117
+#: templates/home.html:112
 msgid "Du"
 msgstr "Du"
 
 #: templates/bar.html:145 templates/bar.html:192 templates/entrees.html:121
+#: templates/home.html:116
 msgid "Au"
 msgstr "Au"
 
@@ -226,18 +288,21 @@ msgid "Ventes filtrées"
 msgstr "Ventes filtrées"
 
 #: templates/bar.html:157 templates/entrees.html:73 templates/entrees.html:148
-#: templates/transfert.html:168
+#: templates/home.html:276 templates/home.html:306 templates/transfert.html:168
 msgid "Date"
 msgstr "Date"
 
 #: templates/bar.html:159 templates/bar.html:206 templates/entrees.html:77
 #: templates/entrees.html:108 templates/entrees.html:149
+#: templates/home.html:246
 msgid "Boisson"
 msgstr "Boisson"
 
 #: templates/bar.html:160 templates/entrees.html:85 templates/entrees.html:150
-#: templates/modifier_recette.html:139 templates/transfert.html:136
-#: templates/transfert.html:170 templates/ventes.html:131
+#: templates/home.html:219 templates/home.html:246 templates/home.html:276
+#: templates/home.html:306 templates/modifier_recette.html:139
+#: templates/transfert.html:136 templates/transfert.html:170
+#: templates/ventes.html:131
 msgid "Quantité"
 msgstr "Quantité"
 
@@ -364,13 +429,140 @@ msgstr "Aucune entrée pour ce filtre."
 msgid "← Retour au Bar"
 msgstr "← Retour au Bar"
 
+#: templates/home.html:6
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: templates/home.html:6 templates/login.html:6 templates/login.html:40
+msgid "Gestion de Stock"
+msgstr "Gestion de Stock"
+
+#: templates/home.html:88
+msgid "Tableau de bord"
+msgstr "Tableau de bord"
+
+#: templates/home.html:91 templates/home.html:212 templates/home.html:239
+msgid "Période"
+msgstr "Période"
+
+#: templates/home.html:93
+msgid "Journée complète"
+msgstr "Journée complète"
+
+#: templates/home.html:96
+msgid "PDF — Point Cuisine (période)"
+msgstr "PDF — Point Cuisine (période)"
+
+#: templates/home.html:99
+msgid "CSV Cuisine"
+msgstr "CSV Cuisine"
+
+#: templates/home.html:102
+msgid "CSV Boissons"
+msgstr "CSV Boissons"
+
+#: templates/home.html:120
+msgid "Heure début"
+msgstr "Heure début"
+
+#: templates/home.html:124
+msgid "Heure fin"
+msgstr "Heure fin"
+
+#: templates/home.html:128
+msgid "Appliquer"
+msgstr "Appliquer"
+
+#: templates/home.html:163
+msgid "Stock cuisine total"
+msgstr "Stock cuisine total"
+
+#: templates/home.html:164
+msgid "unités"
+msgstr "unités"
+
+#: templates/home.html:176
+msgid "Alertes stock"
+msgstr "Alertes stock"
+
+#: templates/home.html:176
+msgid "ingrédient(s) en dessous du seuil"
+msgstr "ingrédient(s) en dessous du seuil"
+
+#: templates/home.html:183 templates/home.html:306 templates/transfert.html:126
+#: templates/transfert.html:169
+msgid "Ingrédient"
+msgstr "Ingrédient"
+
+#: templates/home.html:184
+msgid "Stock cuisine"
+msgstr "Stock cuisine"
+
+#: templates/home.html:185
+msgid "Seuil d'alerte"
+msgstr "Seuil d'alerte"
+
+#: templates/home.html:186
+msgid "Écart"
+msgstr "Écart"
+
+#: templates/home.html:211
+msgid "Cuisine — Plats les plus vendus"
+msgstr "Cuisine — Plats les plus vendus"
+
+#: templates/home.html:219 templates/home.html:276
+msgid "Recette"
+msgstr "Recette"
+
+#: templates/home.html:228
+msgid "Aucune vente de plat sur cette période."
+msgstr "Aucune vente de plat sur cette période."
+
+#: templates/home.html:238
+msgid "Caisse — Boissons les plus vendues"
+msgstr "Caisse — Boissons les plus vendues"
+
+#: templates/home.html:255
+msgid "Aucun pointage bar sur cette période."
+msgstr "Aucun pointage bar sur cette période."
+
+#: templates/home.html:263
+msgid "Détails par période"
+msgstr "Détails par période"
+
+#: templates/home.html:268
+msgid "Ventes en cuisine"
+msgstr "Ventes en cuisine"
+
+#: templates/home.html:289
+msgid "Aucune vente enregistrée."
+msgstr "Aucune vente enregistrée."
+
+#: templates/home.html:298
+msgid "Entrées en cuisine (transferts)"
+msgstr "Entrées en cuisine (transferts)"
+
+#: templates/home.html:306
+msgid "Sens"
+msgstr "Sens"
+
+#: templates/home.html:314 templates/transfert.html:145
+#: templates/transfert.html:184
+msgid "Magasin → Cuisine"
+msgstr "Magasin → Cuisine"
+
+#: templates/home.html:314 templates/transfert.html:149
+#: templates/transfert.html:186
+msgid "Cuisine → Magasin"
+msgstr "Cuisine → Magasin"
+
+#: templates/home.html:321 templates/transfert.html:209
+msgid "Aucun transfert enregistré."
+msgstr "Aucun transfert enregistré."
+
 #: templates/login.html:6
 msgid "Connexion"
 msgstr "Connexion"
-
-#: templates/login.html:6 templates/login.html:40
-msgid "Gestion de Stock"
-msgstr "Gestion de Stock"
 
 #: templates/login.html:54
 msgid "Identifiant"
@@ -464,10 +656,6 @@ msgstr "Entrées de Stock"
 msgid "Effectuer un transfert"
 msgstr "Effectuer un transfert"
 
-#: templates/transfert.html:126 templates/transfert.html:169
-msgid "Ingrédient"
-msgstr "Ingrédient"
-
 #: templates/transfert.html:128
 msgid "-- Sélectionner --"
 msgstr "-- Sélectionner --"
@@ -475,14 +663,6 @@ msgstr "-- Sélectionner --"
 #: templates/transfert.html:141
 msgid "Sens du transfert"
 msgstr "Sens du transfert"
-
-#: templates/transfert.html:145 templates/transfert.html:184
-msgid "Magasin → Cuisine"
-msgstr "Magasin → Cuisine"
-
-#: templates/transfert.html:149 templates/transfert.html:186
-msgid "Cuisine → Magasin"
-msgstr "Cuisine → Magasin"
 
 #: templates/transfert.html:155
 msgid "Transférer"
@@ -492,21 +672,9 @@ msgstr "Transférer"
 msgid "Historique des transferts"
 msgstr "Historique des transferts"
 
-#: templates/transfert.html:171
-msgid "Unité"
-msgstr "Unité"
-
 #: templates/transfert.html:172
 msgid "Direction"
 msgstr "Direction"
-
-#: templates/transfert.html:209
-msgid "Aucun transfert enregistré."
-msgstr "Aucun transfert enregistré."
-
-#: templates/transfert.html:215 templates/ventes.html:143
-msgid "← Retour à l'accueil"
-msgstr "← Retour à l'accueil"
 
 #: templates/ventes.html:111
 msgid "Vente de plats"
