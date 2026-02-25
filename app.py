@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from flask import Flask, Response, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func
 from flask import make_response
 from xhtml2pdf import pisa
@@ -21,6 +23,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+login_manager.login_message = "Veuillez vous connecter pour accéder à cette page."
+login_manager.login_message_category = "warning"
+
 # ========================
 #        MODÈLES
 # ========================
@@ -31,6 +38,7 @@ class Ingredient(db.Model):
     unite = db.Column(db.String(50), nullable=False)
     stock_cuisine = db.Column(db.Float, nullable=False, default=0.0)
     stock_magasin = db.Column(db.Float, nullable=False, default=0.0)
+    seuil_alerte = db.Column(db.Float, nullable=True, default=None)
 
 class Recette(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -50,13 +58,6 @@ class Vente(db.Model):
     quantite = db.Column(db.Integer, nullable=False, default=1)
     date = db.Column(db.DateTime, default=datetime.utcnow)
     recette = db.relationship('Recette')
-
-class Transfert(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ingredient_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'), nullable=False)
-    quantite = db.Column(db.Float, nullable=False)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
-    ingredient = db.relationship('Ingredient')
 
 class HistoriqueTransfert(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -78,31 +79,6 @@ class Boisson(db.Model):
     nom = db.Column(db.String(100), nullable=False)
     prix_unitaire = db.Column(db.Float, nullable=False, default=0.0)
 
-class PointageBar(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
-    caissier = db.Column(db.String(100), nullable=False)
-
-    boisson_id = db.Column(db.Integer, db.ForeignKey('boisson.id'), nullable=False)
-    boisson = db.relationship('Boisson')
-
-    stock_initial = db.Column(db.Float, default=0.0)
-    entrees = db.Column(db.Float, default=0.0)
-    stock_final = db.Column(db.Float, default=0.0)
-    montant_verse = db.Column(db.Float, default=0.0)
-
-    @property
-    def quantite_vendue(self):
-        return max(0.0, self.stock_initial + self.entrees - self.stock_final)
-
-    @property
-    def montant(self):
-        return round(self.quantite_vendue * self.boisson.prix_unitaire, 2)
-
-    @property
-    def balance(self):
-        return round(self.montant - self.montant_verse, 2)
-
 # Ventes de boissons (si utilisées ailleurs)
 class VenteBoisson(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -112,22 +88,6 @@ class VenteBoisson(db.Model):
     date = db.Column(db.DateTime, default=datetime.utcnow)
     boisson = db.relationship('Boisson')
     caissier = db.relationship('Caissier')
-
-class BarPointage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date, nullable=False)
-    caissier = db.Column(db.String(100), nullable=False)
-    produit = db.Column(db.String(100), nullable=False)
-    stock_initial = db.Column(db.Float, nullable=False, default=0)
-    entrees = db.Column(db.Float, nullable=False, default=0)
-    stock_final = db.Column(db.Float, nullable=False, default=0)
-    prix_unitaire = db.Column(db.Float, nullable=False, default=0)
-    @property
-    def quantite_vendue(self):
-        return (self.stock_initial + self.entrees - self.stock_final)
-    @property
-    def montant(self):
-        return self.quantite_vendue * self.prix_unitaire
 
 # Sessions de caisse (logique Excel : SI/ACHAT/SF → VENTE × P.U ; Réel vs Attendu)
 class SessionCaisse(db.Model):
@@ -202,15 +162,70 @@ class EntreeBoisson(db.Model):
             return float(l.stock_final or 0.0)
         return 0.0
 
-# Crée les tables en local (pas d'Alembic nécessaire ici)
+# === AUTHENTIFICATION ===
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(User, int(user_id))
+
+# Les tables sont gérées via Flask-Migrate (Alembic).
+# Au premier déploiement, exécuter : flask db upgrade
+
+def _create_admin_if_needed():
+    """Crée l'utilisateur admin si aucun User n'existe et que ADMIN_PASSWORD est défini."""
+    try:
+        if User.query.count() == 0:
+            pwd = os.environ.get("ADMIN_PASSWORD")
+            if pwd:
+                admin = User(username="admin")
+                admin.set_password(pwd)
+                db.session.add(admin)
+                db.session.commit()
+    except Exception:
+        db.session.rollback()
+
 with app.app_context():
-    db.create_all()
+    _create_admin_if_needed()
 
 # ========================
 #         ROUTES
 # ========================
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            login_user(user)
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('home'))
+        flash("Identifiants incorrects.", "danger")
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("Vous avez été déconnecté.", "info")
+    return redirect(url_for('login'))
+
 @app.route('/bar', methods=['GET', 'POST'])
+@login_required
 def pointage_bar():
     # Pour formulaires d’ajout & affichage
     boissons = Boisson.query.order_by(Boisson.nom.asc()).all()
@@ -338,7 +353,8 @@ def pointage_bar():
     ventes_filtrees = requete.all()
 
     # Historique des sessions (bar)
-    sessions = SessionCaisse.query.order_by(SessionCaisse.date.desc()).limit(100).all()
+    page_sessions = request.args.get('page_sessions', 1, type=int)
+    sessions = SessionCaisse.query.order_by(SessionCaisse.date.desc()).paginate(page=page_sessions, per_page=20, error_out=False)
 
     return render_template(
         'bar.html',
@@ -353,6 +369,7 @@ def pointage_bar():
 
 # --- CRUD boissons (bar) ---
 @app.route('/bar/boisson', methods=['POST'])
+@login_required
 def ajouter_boisson():
     nom = request.form['nom']
     prix = float(request.form['prix'])
@@ -362,6 +379,7 @@ def ajouter_boisson():
     return redirect(url_for('pointage_bar'))
 
 @app.route('/bar/boisson/modifier/<int:id>', methods=['POST'])
+@login_required
 def modifier_boisson(id):
     boisson = Boisson.query.get_or_404(id)
     boisson.nom = request.form['nom']
@@ -370,6 +388,7 @@ def modifier_boisson(id):
     return redirect(url_for('pointage_bar'))
 
 @app.route('/bar/boisson/supprimer/<int:id>', methods=['POST'])
+@login_required
 def supprimer_boisson(id):
     boisson = Boisson.query.get_or_404(id)
     db.session.delete(boisson)
@@ -378,6 +397,7 @@ def supprimer_boisson(id):
 
 # --- NOUVELLE PAGE : Livraisons / Entrées de boissons ---
 @app.route('/bar/entrees', methods=['GET', 'POST'])
+@login_required
 def entrees_boissons():
     boissons = Boisson.query.order_by(Boisson.nom.asc()).all()
 
@@ -443,7 +463,8 @@ def entrees_boissons():
 
     # Résultats
     q = q.order_by(EntreeBoisson.date.desc(), EntreeBoisson.id.desc())
-    recent = q.limit(200).all()
+    page = request.args.get('page', 1, type=int)
+    recent = q.paginate(page=page, per_page=20, error_out=False)
 
     # Total filtré
     total_filtre = (db.session.query(func.coalesce(func.sum(EntreeBoisson.quantite), 0.0))
@@ -467,6 +488,7 @@ def entrees_boissons():
 from flask import make_response  # déjà importé chez toi
 
 @app.route('/')
+@login_required
 def home():
     # Période par défaut : les 30 derniers jours, journée entière
     date_to = request.args.get('date_to', datetime.utcnow().date().isoformat())
@@ -526,6 +548,12 @@ def home():
     ventes_mois = Vente.query.filter(Vente.date >= dt_from, Vente.date <= dt_to).all()
     transferts_mois = HistoriqueTransfert.query.filter(HistoriqueTransfert.date >= dt_from, HistoriqueTransfert.date <= dt_to).all()
 
+    # Alertes stock : ingrédients sous leur seuil d'alerte
+    alertes = Ingredient.query.filter(
+        Ingredient.seuil_alerte.isnot(None),
+        Ingredient.stock_cuisine < Ingredient.seuil_alerte
+    ).order_by(Ingredient.nom.asc()).all()
+
     return render_template(
         'home.html',
         # Filtres
@@ -546,11 +574,14 @@ def home():
         # Données brutes (si besoin ailleurs)
         ventes_mois=ventes_mois,
         transferts_mois=transferts_mois,
-        current_time=datetime.utcnow()
+        current_time=datetime.utcnow(),
+        # Alertes stock
+        alertes=alertes
     )
 
 
 @app.route('/export/cuisine.csv')
+@login_required
 def export_cuisine_csv():
     """Export CSV du point Cuisine (ventes par recette) sur une période."""
     date_to = request.args.get('date_to', datetime.utcnow().date().isoformat())
@@ -589,6 +620,7 @@ def export_cuisine_csv():
     return resp
 
 @app.route('/export/bar.csv')
+@login_required
 def export_bar_csv():
     """
     Export CSV des boissons les plus vendues sur une période.
@@ -629,6 +661,7 @@ def export_bar_csv():
 
 
 @app.route('/rapport/cuisine_periode/pdf')
+@login_required
 def rapport_cuisine_periode_pdf():
     """
     PDF 'Point Cuisine – Période' : mêmes données que le journalier,
@@ -674,6 +707,7 @@ def rapport_cuisine_periode_pdf():
     return response
 
 @app.route('/rapport/journalier/pdf')
+@login_required
 def rapport_journalier_pdf():
     date_str = request.args.get('date', datetime.utcnow().date().isoformat())
     heure_debut = request.args.get('heure_debut', '00:00')
@@ -708,6 +742,7 @@ def rapport_journalier_pdf():
     return response
 
 @app.route('/ajouter', methods=['GET', 'POST'])
+@login_required
 def ajouter():
     if request.method == 'POST':
         try:
@@ -715,8 +750,10 @@ def ajouter():
             unite = request.form['unite']
             stock_magasin = float(request.form.get('stock_magasin', 0))
             stock_cuisine = float(request.form.get('stock_cuisine', 0))
+            seuil_raw = request.form.get('seuil_alerte', '').strip()
+            seuil_alerte = float(seuil_raw) if seuil_raw else None
 
-            nouveau = Ingredient(nom=nom, unite=unite, stock_magasin=stock_magasin, stock_cuisine=stock_cuisine)
+            nouveau = Ingredient(nom=nom, unite=unite, stock_magasin=stock_magasin, stock_cuisine=stock_cuisine, seuil_alerte=seuil_alerte)
             db.session.add(nouveau)
             db.session.commit()
             return redirect(url_for('ajouter'), current_time=datetime.utcnow())
@@ -729,6 +766,7 @@ def ajouter():
     return render_template('ajouter.html', ingredients=ingredients)
 
 @app.route('/modifier/<int:id>', methods=['POST'])
+@login_required
 def modifier(id):
     ingr = Ingredient.query.get_or_404(id)
 
@@ -738,6 +776,8 @@ def modifier(id):
     try:
         ingr.stock_cuisine = float(request.form.get('stock_cuisine', ingr.stock_cuisine))
         ingr.stock_magasin = float(request.form.get('stock_magasin', ingr.stock_magasin))
+        seuil_raw = request.form.get('seuil_alerte', '').strip()
+        ingr.seuil_alerte = float(seuil_raw) if seuil_raw else None
     except ValueError:
         flash("Erreur : les valeurs de stock doivent être numériques.", "danger")
         return redirect(url_for('ajouter'))
@@ -747,6 +787,7 @@ def modifier(id):
     return redirect(url_for('ajouter'))
 
 @app.route('/supprimer/<int:id>', methods=['POST'])
+@login_required
 def supprimer(id):
     ingr = Ingredient.query.get_or_404(id)
     db.session.delete(ingr)
@@ -754,6 +795,7 @@ def supprimer(id):
     return redirect(url_for('ajouter'))
 
 @app.route('/recettes', methods=['GET', 'POST'])
+@login_required
 def recettes():
     if request.method == 'POST':
         nom = request.form['nom']
@@ -774,6 +816,7 @@ def recettes():
     return render_template('recettes.html', ingredients = Ingredient.query.order_by(Ingredient.nom.asc()).all(), recettes=Recette.query.all())
 
 @app.route('/modifier_recette/<int:id>', methods=['GET', 'POST'])
+@login_required
 def modifier_recette(id):
     recette = Recette.query.get_or_404(id)
     if request.method == 'POST':
@@ -796,6 +839,7 @@ def modifier_recette(id):
     return render_template('modifier_recette.html', recette=recette, ingredients = Ingredient.query.order_by(Ingredient.nom.asc()).all(), quantites=quantites)
 
 @app.route('/recette/supprimer/<int:id>', methods=['POST'])
+@login_required
 def supprimer_recette(id):
     recette = Recette.query.get_or_404(id)
     db.session.delete(recette)
@@ -803,6 +847,7 @@ def supprimer_recette(id):
     return redirect(url_for('recettes'))
 
 @app.route('/recette/dupliquer/<int:id>', methods=['POST'])
+@login_required
 def dupliquer_recette(id):
     recette_originale = Recette.query.get_or_404(id)
     nouveau_nom = f"{recette_originale.nom} (copie)"
@@ -823,6 +868,7 @@ def dupliquer_recette(id):
     return redirect(url_for('recettes'))
 
 @app.route('/ventes', methods=['GET', 'POST'])
+@login_required
 def ventes():
     recettes = Recette.query.all()
     message = ""
@@ -849,9 +895,11 @@ def ventes():
     return render_template('ventes.html', recettes=recettes, message=message)
 
 @app.route('/transfert', methods=['GET', 'POST'])
+@login_required
 def transfert():
+    page = request.args.get('page', 1, type=int)
     ingredients = Ingredient.query.order_by(Ingredient.nom.asc()).all()
-    transferts = HistoriqueTransfert.query.order_by(HistoriqueTransfert.date.desc()).all()
+    transferts = HistoriqueTransfert.query.order_by(HistoriqueTransfert.date.desc()).paginate(page=page, per_page=20, error_out=False)
 
     if request.method == 'POST':
         try:
@@ -892,6 +940,17 @@ def transfert():
 @app.context_processor
 def inject_request():
     return dict(request=request)
+
+@app.context_processor
+def inject_nb_alertes():
+    try:
+        nb_alertes = Ingredient.query.filter(
+            Ingredient.seuil_alerte.isnot(None),
+            Ingredient.stock_cuisine < Ingredient.seuil_alerte
+        ).count()
+    except Exception:
+        nb_alertes = 0
+    return dict(nb_alertes=nb_alertes, current_time=datetime.utcnow())
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)

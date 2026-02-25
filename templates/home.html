@@ -63,9 +63,13 @@
       {% for endpoint, label in nav_links %}
       <li class="nav-item">
         <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}"
-           href="{{ url_for(endpoint) }}">{{ label }}</a>
+           href="{{ url_for(endpoint) }}">{{ label }}{% if endpoint == 'ajouter' and nb_alertes > 0 %} <span class="badge bg-danger rounded-pill">{{ nb_alertes }}</span>{% endif %}</a>
       </li>
       {% endfor %}
+      <li class="nav-item ms-3 d-flex align-items-center">
+        <span class="text-white-50 me-2 small">{{ current_user.username }}</span>
+        <a class="nav-link text-warning" href="{{ url_for('logout') }}">Déconnexion</a>
+      </li>
     </ul>
   </div>
 </nav>
@@ -156,6 +160,40 @@
       </div>
     </div>
   </div>
+
+  <!-- ALERTES STOCK -->
+  {% if alertes %}
+  <div class="card mb-4 border-danger mt-4">
+    <div class="card-header bg-danger text-white">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      Alertes stock — {{ alertes|length }} ingrédient(s) en dessous du seuil
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Ingrédient</th>
+              <th class="text-end">Stock cuisine</th>
+              <th class="text-end">Seuil d'alerte</th>
+              <th class="text-end">Écart</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ingr in alertes %}
+            <tr class="table-danger">
+              <td>{{ ingr.nom }} <span class="text-muted small">({{ ingr.unite }})</span></td>
+              <td class="text-end">{{ ingr.stock_cuisine }}</td>
+              <td class="text-end">{{ ingr.seuil_alerte }}</td>
+              <td class="text-end text-danger fw-bold">{{ '%.2f'|format(ingr.stock_cuisine - ingr.seuil_alerte) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   <!-- CHARTS -->
   <div class="row g-4">

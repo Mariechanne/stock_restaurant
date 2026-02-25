@@ -63,9 +63,13 @@
       {% for endpoint, label in nav_links %}
       <li class="nav-item">
         <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}"
-           href="{{ url_for(endpoint) }}">{{ label }}</a>
+           href="{{ url_for(endpoint) }}">{{ label }}{% if endpoint == 'ajouter' and nb_alertes > 0 %} <span class="badge bg-danger rounded-pill">{{ nb_alertes }}</span>{% endif %}</a>
       </li>
       {% endfor %}
+      <li class="nav-item ms-3 d-flex align-items-center">
+        <span class="text-white-50 me-2 small">{{ current_user.username }}</span>
+        <a class="nav-link text-warning" href="{{ url_for('logout') }}">Déconnexion</a>
+      </li>
     </ul>
   </div>
 </nav>
@@ -93,6 +97,10 @@
           <label class="form-label">Stock Cuisine :</label>
           <input type="number" step="0.01" name="stock_cuisine" class="form-control">
         </div>
+        <div class="mb-3">
+          <label class="form-label">Seuil d'alerte (optionnel) :</label>
+          <input type="number" step="0.01" name="seuil_alerte" class="form-control" placeholder="Laisser vide si pas d'alerte">
+        </div>
         <div class="text-end">
           <button type="submit" class="btn btn-success">Ajouter</button>
           <a href="{{ url_for('home') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
@@ -116,6 +124,7 @@
               <th>Unité</th>
               <th>Stock Cuisine</th>
               <th>Stock Magasin</th>
+              <th>Seuil alerte</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
@@ -127,6 +136,7 @@
                 <td><input name="unite" value="{{ ingr.unite }}" class="form-control form-control-sm" required></td>
                 <td><input name="stock_cuisine" type="number" step="0.01" value="{{ ingr.stock_cuisine }}" class="form-control form-control-sm" required></td>
                 <td><input name="stock_magasin" type="number" step="0.01" value="{{ ingr.stock_magasin }}" class="form-control form-control-sm" required></td>
+                <td><input name="seuil_alerte" type="number" step="0.01" value="{{ ingr.seuil_alerte if ingr.seuil_alerte is not none else '' }}" class="form-control form-control-sm" placeholder="—"></td>
                 <td class="text-end">
                   <button class="btn btn-warning btn-sm" type="submit" title="Modifier">✏</button>
                   <a href="{{ url_for('supprimer', id=ingr.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer {{ ingr.nom }} ?')">🗑</a>
@@ -155,7 +165,7 @@
 </div>
 
 <footer>
-  © 2025 Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
+  © {{ current_time.year }} Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

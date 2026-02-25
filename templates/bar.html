@@ -44,9 +44,13 @@
             ] %}
             {% for endpoint, label in nav_links %}
             <li class="nav-item">
-                <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}" href="{{ url_for(endpoint) }}">{{ label }}</a>
+                <a class="nav-link {{ 'active text-warning fw-bold' if request.path == url_for(endpoint) else '' }}" href="{{ url_for(endpoint) }}">{{ label }}{% if endpoint == 'ajouter' and nb_alertes > 0 %} <span class="badge bg-danger rounded-pill">{{ nb_alertes }}</span>{% endif %}</a>
             </li>
             {% endfor %}
+            <li class="nav-item ms-3 d-flex align-items-center">
+                <span class="text-white-50 me-2 small">{{ current_user.username }}</span>
+                <a class="nav-link text-warning" href="{{ url_for('logout') }}">Déconnexion</a>
+            </li>
         </ul>
     </div>
 </nav>
@@ -235,7 +239,7 @@
     <div class="card" id="sessions">
         <div class="card-header bg-dark text-white">📘 Historique des sessions (Attendu / Réel / Écart)</div>
         <div class="card-body">
-            {% if sessions and sessions|length > 0 %}
+            {% if sessions.items %}
             <div class="table-responsive">
                 <table class="table table-bordered align-middle">
                     <thead class="table-light">
@@ -249,7 +253,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for s in sessions %}
+                        {% for s in sessions.items %}
                         <tr class="{% if (s.ecart|round(0)) != 0 %}table-warning{% endif %}">
                             <td>{{ s.date }}</td>
                             <td>{{ s.caissier.nom }}</td>
@@ -298,6 +302,21 @@
                     </tbody>
                 </table>
             </div>
+            {% if sessions.pages > 1 %}
+            <nav class="mt-3">
+              <ul class="pagination pagination-sm justify-content-center mb-0">
+                <li class="page-item {% if not sessions.has_prev %}disabled{% endif %}">
+                  <a class="page-link" href="{{ url_for('pointage_bar', page_sessions=sessions.prev_num, caissier_id=caissier_id, date_debut=date_debut, date_fin=date_fin) }}">‹ Précédent</a>
+                </li>
+                <li class="page-item disabled">
+                  <span class="page-link">Page {{ sessions.page }} / {{ sessions.pages }}</span>
+                </li>
+                <li class="page-item {% if not sessions.has_next %}disabled{% endif %}">
+                  <a class="page-link" href="{{ url_for('pointage_bar', page_sessions=sessions.next_num, caissier_id=caissier_id, date_debut=date_debut, date_fin=date_fin) }}">Suivant ›</a>
+                </li>
+              </ul>
+            </nav>
+            {% endif %}
             {% else %}
                 <p class="text-muted mb-0">Aucune session enregistrée pour le moment.</p>
             {% endif %}
@@ -307,7 +326,7 @@
 
 <!-- Pied de page -->
 <footer>
-    © 2025 Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
+    © {{ current_time.year }} Lotus Garden Stock Manager by Melvina MIGAN — Tous droits réservés.
 </footer>
 
 <script>

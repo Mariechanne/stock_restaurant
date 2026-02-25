@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.log
+*.pyc
 
 # Environnements
 .env
@@ -30,3 +31,6 @@ htmlcov/
 
 # Autres
 *.swp
+
+# Claude Code
+.claude/
