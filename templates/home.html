@@ -211,19 +211,9 @@
           <span>🍽️ {{ _('Cuisine — Plats les plus vendus') }}</span>
           <span class="badge bg-light text-dark border badge-round">{{ _('Période') }} {{ date_from }} → {{ date_to }} ({{ heure_debut }}–{{ heure_fin }})</span>
         </div>
-        <div class="card-body">
+        <div class="card-body p-2">
           {% if recettes_labels and recettes_labels|length > 0 %}
-            <canvas id="chartCuisine" style="height:280px" aria-label="Graphique plats les plus vendus" role="img"></canvas>
-            <div class="table-responsive mt-3">
-              <table class="table table-sm table-hover align-middle mb-0">
-                <thead class="table-light"><tr><th>{{ _('Recette') }}</th><th class="text-end">{{ _('Quantité') }}</th></tr></thead>
-                <tbody>
-                {% for r in top_recettes %}
-                  <tr><td>{{ r.recette }}</td><td class="text-end">{{ r.qte|int }}</td></tr>
-                {% endfor %}
-                </tbody>
-              </table>
-            </div>
+            <canvas id="chartCuisine" style="height:220px" aria-label="Graphique plats les plus vendus" role="img"></canvas>
           {% else %}
             <p class="text-muted mb-0">{{ _('Aucune vente de plat sur cette période.') }}</p>
           {% endif %}
@@ -238,19 +228,9 @@
           <span>🍸 {{ _('Caisse — Boissons les plus vendues') }}</span>
           <span class="badge bg-light text-dark border badge-round">{{ _('Période') }} {{ date_from }} → {{ date_to }}</span>
         </div>
-        <div class="card-body">
+        <div class="card-body p-2">
           {% if boissons_labels and boissons_labels|length > 0 %}
-            <canvas id="chartBoissons" style="height:280px" aria-label="Graphique boissons les plus vendues" role="img"></canvas>
-            <div class="table-responsive mt-3">
-              <table class="table table-sm table-hover align-middle mb-0">
-                <thead class="table-light"><tr><th>{{ _('Boisson') }}</th><th class="text-end">{{ _('Quantité') }}</th></tr></thead>
-                <tbody>
-                {% for b in top_boissons %}
-                  <tr><td>{{ b.boisson }}</td><td class="text-end">{{ '%.2f'|format(b.qte_vendue) }}</td></tr>
-                {% endfor %}
-                </tbody>
-              </table>
-            </div>
+            <canvas id="chartBoissons" style="height:220px" aria-label="Graphique boissons les plus vendues" role="img"></canvas>
           {% else %}
             <p class="text-muted mb-0">{{ _('Aucun pointage bar sur cette période.') }}</p>
           {% endif %}
@@ -377,8 +357,8 @@
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'bottom',
-            labels: { font: { size: 12 }, padding: 12, boxWidth: 14 }
+            position: 'right',
+            labels: { font: { size: 11 }, padding: 8, boxWidth: 12 }
           },
           tooltip: {
             callbacks: {
