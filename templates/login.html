@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Connexion - Gestion de Stock</title>
+  <title>{{ _('Connexion') }} - {{ _('Gestion de Stock') }}</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <style>
     body {
@@ -37,7 +37,7 @@
   <div class="login-card card">
     <div class="login-header">
       <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
-      <h5 class="mb-0 mt-1">Gestion de Stock</h5>
+      <h5 class="mb-0 mt-1">{{ _('Gestion de Stock') }}</h5>
     </div>
     <div class="card-body p-4">
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -51,18 +51,25 @@
 
       <form method="POST" action="{{ url_for('login') }}">
         <div class="mb-3">
-          <label for="username" class="form-label fw-semibold">Identifiant</label>
+          <label for="username" class="form-label fw-semibold">{{ _('Identifiant') }}</label>
           <input type="text" id="username" name="username" class="form-control"
                  placeholder="admin" required autofocus>
         </div>
         <div class="mb-4">
-          <label for="password" class="form-label fw-semibold">Mot de passe</label>
+          <label for="password" class="form-label fw-semibold">{{ _('Mot de passe') }}</label>
           <input type="password" id="password" name="password" class="form-control"
                  placeholder="••••••••" required>
         </div>
-        <button type="submit" class="btn btn-dark w-100">Se connecter</button>
+        <button type="submit" class="btn btn-dark w-100">{{ _('Se connecter') }}</button>
       </form>
     </div>
+  </div>
+  <div class="text-center mt-3 small">
+    <a href="{{ url_for('set_language', lang='fr') }}"
+       class="text-secondary {% if session.get('lang','fr')=='fr' %}fw-bold{% endif %}">FR</a>
+    <span class="text-muted mx-1">|</span>
+    <a href="{{ url_for('set_language', lang='en') }}"
+       class="text-secondary {% if session.get('lang','fr')=='en' %}fw-bold{% endif %}">EN</a>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

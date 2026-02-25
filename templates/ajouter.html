@@ -52,13 +52,13 @@
   <div class="collapse navbar-collapse" id="navbarNav">
     <ul class="navbar-nav ms-auto">
       {% set nav_links = [
-        ('home', 'Accueil'),
-        ('ajouter', 'Ingrédients'),
-        ('recettes', 'Recettes'),
-        ('ventes', 'Ventes'),
-        ('transfert', 'Entrées (cuisine)'),
-        ('pointage_bar', 'Bar'),
-        ('entrees_boissons', 'Livraisons Bar')
+        ('home', _('Accueil')),
+        ('ajouter', _('Ingrédients')),
+        ('recettes', _('Recettes')),
+        ('ventes', _('Ventes')),
+        ('transfert', _('Entrées (cuisine)')),
+        ('pointage_bar', _('Bar')),
+        ('entrees_boissons', _('Livraisons Bar'))
       ] %}
       {% for endpoint, label in nav_links %}
       <li class="nav-item">
@@ -68,7 +68,14 @@
       {% endfor %}
       <li class="nav-item ms-3 d-flex align-items-center">
         <span class="text-white-50 me-2 small">{{ current_user.username }}</span>
-        <a class="nav-link text-warning" href="{{ url_for('logout') }}">Déconnexion</a>
+        <a class="nav-link text-warning" href="{{ url_for('logout') }}">{{ _('Déconnexion') }}</a>
+      </li>
+      <li class="nav-item ms-2 d-flex align-items-center gap-1">
+        <a href="{{ url_for('set_language', lang='fr') }}"
+           class="nav-link small py-0 px-1 {% if session.get('lang','fr')=='fr' %}text-white fw-bold{% else %}text-white-50{% endif %}">FR</a>
+        <span class="text-white-50 small">|</span>
+        <a href="{{ url_for('set_language', lang='en') }}"
+           class="nav-link small py-0 px-1 {% if session.get('lang','fr')=='en' %}text-white fw-bold{% else %}text-white-50{% endif %}">EN</a>
       </li>
     </ul>
   </div>
@@ -76,56 +83,56 @@
 
 <div class="container mt-5">
 
-  <h1 class="text-center mb-4">➕ Ajouter un ingrédient</h1>
+  <h1 class="text-center mb-4">➕ {{ _('Ajouter un ingrédient') }}</h1>
 
   <div class="card shadow mb-5 mx-auto" style="max-width: 600px;">
     <div class="card-body">
       <form method="POST" action="{{ url_for('ajouter') }}">
         <div class="mb-3">
-          <label class="form-label">Nom :</label>
+          <label class="form-label">{{ _('Nom') }} :</label>
           <input type="text" name="nom" class="form-control" required>
         </div>
         <div class="mb-3">
-          <label class="form-label">Unité :</label>
+          <label class="form-label">{{ _('Unité') }} :</label>
           <input type="text" name="unite" class="form-control" required>
         </div>
         <div class="mb-3">
-          <label class="form-label">Stock Magasin :</label>
+          <label class="form-label">{{ _('Stock Magasin') }} :</label>
           <input type="number" step="0.01" name="stock_magasin" class="form-control">
         </div>
         <div class="mb-3">
-          <label class="form-label">Stock Cuisine :</label>
+          <label class="form-label">{{ _('Stock Cuisine') }} :</label>
           <input type="number" step="0.01" name="stock_cuisine" class="form-control">
         </div>
         <div class="mb-3">
-          <label class="form-label">Seuil d'alerte (optionnel) :</label>
-          <input type="number" step="0.01" name="seuil_alerte" class="form-control" placeholder="Laisser vide si pas d'alerte">
+          <label class="form-label">{{ _("Seuil d'alerte (optionnel)") }} :</label>
+          <input type="number" step="0.01" name="seuil_alerte" class="form-control" placeholder="{{ _(\"Laisser vide si pas d'alerte\") }}">
         </div>
         <div class="text-end">
-          <button type="submit" class="btn btn-success">Ajouter</button>
-          <a href="{{ url_for('home') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
+          <button type="submit" class="btn btn-success">{{ _('Ajouter') }}</button>
+          <a href="{{ url_for('home') }}" class="btn btn-outline-secondary ms-2">{{ _('Annuler') }}</a>
         </div>
       </form>
     </div>
   </div>
 
   <div class="card shadow">
-    <div class="card-header bg-secondary text-white">📋 Ingrédients existants</div>
+    <div class="card-header bg-secondary text-white">📋 {{ _('Ingrédients existants') }}</div>
     <div class="card-body">
 
-      <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Rechercher...">
+      <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 {{ _('Rechercher...') }}">
 
       {% if ingredients %}
       <div class="table-responsive">
         <table id="ingredientsTable" class="table table-striped align-middle">
           <thead class="table-light">
             <tr>
-              <th>Nom</th>
-              <th>Unité</th>
-              <th>Stock Cuisine</th>
-              <th>Stock Magasin</th>
-              <th>Seuil alerte</th>
-              <th class="text-center">Actions</th>
+              <th>{{ _('Nom') }}</th>
+              <th>{{ _('Unité') }}</th>
+              <th>{{ _('Stock Cuisine') }}</th>
+              <th>{{ _('Stock Magasin') }}</th>
+              <th>{{ _('Seuil alerte') }}</th>
+              <th class="text-center">{{ _('Actions') }}</th>
             </tr>
           </thead>
           <tbody id="ingredientsBody">
@@ -153,13 +160,13 @@
         <ul id="pagination" class="pagination mt-4"></ul>
       </nav>
       {% else %}
-      <p class="text-muted">Aucun ingrédient enregistré.</p>
+      <p class="text-muted">{{ _('Aucun ingrédient enregistré.') }}</p>
       {% endif %}
     </div>
   </div>
 
   <div class="text-center mt-4">
-    <a href="{{ url_for('home') }}" class="btn btn-outline-primary">← Retour à l’accueil</a>
+    <a href="{{ url_for('home') }}" class="btn btn-outline-primary">{{ _("← Retour à l'accueil") }}</a>
   </div>
 
 </div>

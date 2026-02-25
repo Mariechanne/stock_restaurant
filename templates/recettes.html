@@ -61,13 +61,13 @@
   <div class="collapse navbar-collapse" id="navbarNav">
     <ul class="navbar-nav ms-auto">
       {% set nav_links = [
-        ('home', 'Accueil'),
-        ('ajouter', 'Ingrédients'),
-        ('recettes', 'Recettes'),
-        ('ventes', 'Ventes'),
-        ('transfert', 'Entrées (cuisine)'),
-        ('pointage_bar', 'Bar'),
-        ('entrees_boissons', 'Livraisons Bar')
+        ('home', _('Accueil')),
+        ('ajouter', _('Ingrédients')),
+        ('recettes', _('Recettes')),
+        ('ventes', _('Ventes')),
+        ('transfert', _('Entrées (cuisine)')),
+        ('pointage_bar', _('Bar')),
+        ('entrees_boissons', _('Livraisons Bar'))
       ] %}
       {% for endpoint, label in nav_links %}
       <li class="nav-item">
@@ -77,7 +77,14 @@
       {% endfor %}
       <li class="nav-item ms-3 d-flex align-items-center">
         <span class="text-white-50 me-2 small">{{ current_user.username }}</span>
-        <a class="nav-link text-warning" href="{{ url_for('logout') }}">Déconnexion</a>
+        <a class="nav-link text-warning" href="{{ url_for('logout') }}">{{ _('Déconnexion') }}</a>
+      </li>
+      <li class="nav-item ms-2 d-flex align-items-center gap-1">
+        <a href="{{ url_for('set_language', lang='fr') }}"
+           class="nav-link small py-0 px-1 {% if session.get('lang','fr')=='fr' %}text-white fw-bold{% else %}text-white-50{% endif %}">FR</a>
+        <span class="text-white-50 small">|</span>
+        <a href="{{ url_for('set_language', lang='en') }}"
+           class="nav-link small py-0 px-1 {% if session.get('lang','fr')=='en' %}text-white fw-bold{% else %}text-white-50{% endif %}">EN</a>
       </li>
     </ul>
   </div>
@@ -85,28 +92,28 @@
 
 <!-- CONTENU -->
 <div class="container mt-5">
-    <h1 class="text-center mb-5">📋 Fiches Techniques</h1>
+    <h1 class="text-center mb-5">📋 {{ _('Fiches Techniques') }}</h1>
 
     <!-- FORMULAIRE NOUVELLE RECETTE -->
     <div class="card mb-5 mx-auto" style="max-width: 800px;">
-        <div class="card-header bg-success text-white">Créer une nouvelle recette</div>
+        <div class="card-header bg-success text-white">{{ _('Créer une nouvelle recette') }}</div>
         <div class="card-body">
             <form method="POST">
                 <div class="mb-3">
-                    <label class="form-label">Nom de la recette :</label>
+                    <label class="form-label">{{ _('Nom de la recette') }} :</label>
                     <input type="text" name="nom" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
                     <button class="btn btn-outline-secondary" type="button" onclick="document.querySelector('.ingredient-selector').style.display = 'block'; this.style.display = 'none';">
-                        Ajouter des ingrédients
+                        {{ _('Ajouter des ingrédients') }}
                     </button>
                 </div>
 
                 <div class="ingredient-selector">
-                    <input type="text" id="searchIngredient" class="form-control mb-4" placeholder="Rechercher un ingrédient...">
+                    <input type="text" id="searchIngredient" class="form-control mb-4" placeholder="{{ _('Rechercher un ingrédient...') }}">
 
-                    <h5 class="mb-3">🧾 Ingrédients utilisés</h5>
+                    <h5 class="mb-3">🧾 {{ _('Ingrédients utilisés') }}</h5>
                     {% for ingr in ingredients %}
                     <div class="row align-items-center mb-2 ingredient-row">
                         <div class="col-md-5">
@@ -116,7 +123,7 @@
                             </div>
                         </div>
                         <div class="col-md-7">
-                            <input type="number" step="0.01" name="ingredients[{{ ingr.id }}][quantite]" class="form-control quantity-input" placeholder="Quantité utilisée" style="display: none;">
+                            <input type="number" step="0.01" name="ingredients[{{ ingr.id }}][quantite]" class="form-control quantity-input" placeholder="{{ _('Quantité utilisée') }}" style="display: none;">
                         </div>
                     </div>
                     {% endfor %}
@@ -124,7 +131,7 @@
 
                 <div class="text-end mt-4">
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Créer la recette
+                        <i class="bi bi-plus-circle"></i> {{ _('Créer la recette') }}
                     </button>
                 </div>
             </form>
@@ -133,8 +140,8 @@
 
     <!-- LISTE DES RECETTES -->
     <div class="mb-4">
-        <h2 class="mb-3">📚 Recettes existantes</h2>
-        <input type="text" id="searchRecette" class="form-control mb-4" placeholder="Rechercher une recette...">
+        <h2 class="mb-3">📚 {{ _('Recettes existantes') }}</h2>
+        <input type="text" id="searchRecette" class="form-control mb-4" placeholder="{{ _('Rechercher une recette...') }}">
 
         {% if recettes %}
         <div class="row">
@@ -150,16 +157,16 @@
                         </ul>
                         <div class="mt-auto">
                             <a href="{{ url_for('modifier_recette', id=recette.id) }}" class="btn btn-sm btn-outline-warning me-2 mb-1 w-100">
-                                <i class="bi bi-pencil-square"></i> Modifier
+                                <i class="bi bi-pencil-square"></i> {{ _('Modifier') }}
                             </a>
                             <form action="{{ url_for('supprimer_recette', id=recette.id) }}" method="POST" class="d-inline w-100 mb-1">
                                 <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Supprimer cette recette ?')">
-                                    <i class="bi bi-trash"></i> Supprimer
+                                    <i class="bi bi-trash"></i> {{ _('Supprimer') }}
                                 </button>
                             </form>
                             <form action="{{ url_for('dupliquer_recette', id=recette.id) }}" method="POST" class="d-inline w-100">
                                 <button type="submit" class="btn btn-sm btn-outline-secondary w-100">
-                                    <i class="bi bi-files"></i> Dupliquer
+                                    <i class="bi bi-files"></i> {{ _('Dupliquer') }}
                                 </button>
                             </form>
                         </div>
@@ -169,14 +176,14 @@
             {% endfor %}
         </div>
         {% else %}
-        <p class="text-muted">Aucune recette enregistrée.</p>
+        <p class="text-muted">{{ _('Aucune recette enregistrée.') }}</p>
         {% endif %}
     </div>
 
     <!-- Bouton retour -->
     <div class="text-center mt-4">
         <a href="{{ url_for('home') }}" class="btn btn-outline-dark">
-            <i class="bi bi-arrow-left-circle"></i> Retour à l'accueil
+            <i class="bi bi-arrow-left-circle"></i> {{ _("Retour à l'accueil") }}
         </a>
     </div>
 </div>

@@ -72,13 +72,13 @@
   <div class="collapse navbar-collapse" id="navbarNav">
     <ul class="navbar-nav ms-auto">
       {% set nav_links = [
-        ('home', 'Accueil'),
-        ('ajouter', 'Ingrédients'),
-        ('recettes', 'Recettes'),
-        ('ventes', 'Ventes'),
-        ('transfert', 'Entrées (cuisine)'),
-        ('pointage_bar', 'Bar'),
-        ('entrees_boissons', 'Livraisons Bar')
+        ('home', _('Accueil')),
+        ('ajouter', _('Ingrédients')),
+        ('recettes', _('Recettes')),
+        ('ventes', _('Ventes')),
+        ('transfert', _('Entrées (cuisine)')),
+        ('pointage_bar', _('Bar')),
+        ('entrees_boissons', _('Livraisons Bar'))
       ] %}
       {% for endpoint, label in nav_links %}
       <li class="nav-item">
@@ -88,7 +88,14 @@
       {% endfor %}
       <li class="nav-item ms-3 d-flex align-items-center">
         <span class="text-white-50 me-2 small">{{ current_user.username }}</span>
-        <a class="nav-link text-warning" href="{{ url_for('logout') }}">Déconnexion</a>
+        <a class="nav-link text-warning" href="{{ url_for('logout') }}">{{ _('Déconnexion') }}</a>
+      </li>
+      <li class="nav-item ms-2 d-flex align-items-center gap-1">
+        <a href="{{ url_for('set_language', lang='fr') }}"
+           class="nav-link small py-0 px-1 {% if session.get('lang','fr')=='fr' %}text-white fw-bold{% else %}text-white-50{% endif %}">FR</a>
+        <span class="text-white-50 small">|</span>
+        <a href="{{ url_for('set_language', lang='en') }}"
+           class="nav-link small py-0 px-1 {% if session.get('lang','fr')=='en' %}text-white fw-bold{% else %}text-white-50{% endif %}">EN</a>
       </li>
     </ul>
   </div>
@@ -101,17 +108,17 @@
   </head>
   <body class="bg-light">
     <div class="container mt-5">
-      <h1 class="text-center mb-4">✏ Modifier la recette “{{ recette.nom }}”</h1>
+      <h1 class="text-center mb-4">✏ {{ _('Modifier la recette') }} "{{ recette.nom }}"</h1>
 
       <div class="card">
         <div class="card-body">
           <form method="POST">
             <div class="mb-3">
-              <label for="nom" class="form-label">Nom de la recette :</label>
+              <label for="nom" class="form-label">{{ _('Nom de la recette') }} :</label>
               <input type="text" id="nom" name="nom" class="form-control" value="{{ recette.nom }}" required>
             </div>
 
-            <h5 class="mt-4">Ingrédients</h5>
+            <h5 class="mt-4">{{ _('Ingrédients') }}</h5>
             {% for ingr in ingredients %}
               <div class="row align-items-center mb-2">
                 <div class="col-auto">
@@ -129,7 +136,7 @@
                     step="0.01"
                     name="quantite_{{ ingr.id }}"
                     class="form-control"
-                    placeholder="Quantité"
+                    placeholder="{{ _('Quantité') }}"
                     value="{{ quantites.get(ingr.id, '') }}"
                     {% if ingr.id not in quantites %}disabled{% endif %}
                   >
@@ -138,8 +145,8 @@
             {% endfor %}
 
             <div class="text-end mt-3">
-              <button type="submit" class="btn btn-warning">💾 Enregistrer les modifications</button>
-              <a href="{{ url_for('recettes') }}" class="btn btn-outline-secondary ms-2">← Annuler</a>
+              <button type="submit" class="btn btn-warning">💾 {{ _('Enregistrer les modifications') }}</button>
+              <a href="{{ url_for('recettes') }}" class="btn btn-outline-secondary ms-2">{{ _("← Annuler") }}</a>
             </div>
           </form>
         </div>

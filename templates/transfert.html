@@ -72,13 +72,13 @@
   <div class="collapse navbar-collapse" id="navbarNav">
     <ul class="navbar-nav ms-auto">
       {% set nav_links = [
-        ('home', 'Accueil'),
-        ('ajouter', 'Ingrédients'),
-        ('recettes', 'Recettes'),
-        ('ventes', 'Ventes'),
-        ('transfert', 'Entrées (cuisine)'),
-        ('pointage_bar', 'Bar'),
-        ('entrees_boissons', 'Livraisons Bar')
+        ('home', _('Accueil')),
+        ('ajouter', _('Ingrédients')),
+        ('recettes', _('Recettes')),
+        ('ventes', _('Ventes')),
+        ('transfert', _('Entrées (cuisine)')),
+        ('pointage_bar', _('Bar')),
+        ('entrees_boissons', _('Livraisons Bar'))
       ] %}
       {% for endpoint, label in nav_links %}
       <li class="nav-item">
@@ -88,7 +88,14 @@
       {% endfor %}
       <li class="nav-item ms-3 d-flex align-items-center">
         <span class="text-white-50 me-2 small">{{ current_user.username }}</span>
-        <a class="nav-link text-warning" href="{{ url_for('logout') }}">Déconnexion</a>
+        <a class="nav-link text-warning" href="{{ url_for('logout') }}">{{ _('Déconnexion') }}</a>
+      </li>
+      <li class="nav-item ms-2 d-flex align-items-center gap-1">
+        <a href="{{ url_for('set_language', lang='fr') }}"
+           class="nav-link small py-0 px-1 {% if session.get('lang','fr')=='fr' %}text-white fw-bold{% else %}text-white-50{% endif %}">FR</a>
+        <span class="text-white-50 small">|</span>
+        <a href="{{ url_for('set_language', lang='en') }}"
+           class="nav-link small py-0 px-1 {% if session.get('lang','fr')=='en' %}text-white fw-bold{% else %}text-white-50{% endif %}">EN</a>
       </li>
     </ul>
   </div>
@@ -101,7 +108,7 @@
   </head>
   <body class="bg-light">
     <div class="container mt-5">
-      <h1 class="text-center mb-4">↔️ Entrées de Stock</h1>
+      <h1 class="text-center mb-4">↔️ {{ _('Entrées de Stock') }}</h1>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -112,13 +119,13 @@
       {% endwith %}
 
       <div class="card mb-5">
-        <div class="card-header bg-info text-white">Effectuer un transfert</div>
+        <div class="card-header bg-info text-white">{{ _('Effectuer un transfert') }}</div>
         <div class="card-body">
           <form method="POST">
             <div class="mb-3">
-              <label for="ingredient" class="form-label">Ingrédient :</label>
+              <label for="ingredient" class="form-label">{{ _('Ingrédient') }} :</label>
               <select name="ingredient" id="ingredient" class="form-select" required>
-                <option value="">-- Sélectionner --</option>
+                <option value="">{{ _('-- Sélectionner --') }}</option>
                 {% for ingr in ingredients %}
                   <option value="{{ ingr.id }}">{{ ingr.nom }} (Magasin: {{ ingr.stock_magasin }}, Cuisine: {{ ingr.stock_cuisine }})</option>
                 {% endfor %}
@@ -126,43 +133,43 @@
             </div>
 
             <div class="mb-3">
-              <label for="quantite" class="form-label">Quantité :</label>
+              <label for="quantite" class="form-label">{{ _('Quantité') }} :</label>
               <input type="number" name="quantite" id="quantite" class="form-control" step="0.01" required>
             </div>
 
             <div class="mb-3">
-              <label class="form-label">Sens du transfert :</label>
+              <label class="form-label">{{ _('Sens du transfert') }} :</label>
               <div>
                 <div class="form-check form-check-inline">
                   <input class="form-check-input" type="radio" name="sens" id="m2c" value="magasin_vers_cuisine" checked>
-                  <label class="form-check-label" for="m2c">Magasin → Cuisine</label>
+                  <label class="form-check-label" for="m2c">{{ _('Magasin → Cuisine') }}</label>
                 </div>
                 <div class="form-check form-check-inline">
                   <input class="form-check-input" type="radio" name="sens" id="c2m" value="cuisine_vers_magasin">
-                  <label class="form-check-label" for="c2m">Cuisine → Magasin</label>
+                  <label class="form-check-label" for="c2m">{{ _('Cuisine → Magasin') }}</label>
                 </div>
               </div>
             </div>
 
             <div class="text-end">
-              <button type="submit" class="btn btn-primary">🚚 Transférer</button>
+              <button type="submit" class="btn btn-primary">🚚 {{ _('Transférer') }}</button>
             </div>
           </form>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header bg-secondary text-white">Historique des transferts</div>
+        <div class="card-header bg-secondary text-white">{{ _('Historique des transferts') }}</div>
         <div class="card-body">
           {% if transferts.items %}
             <table class="table table-sm table-striped">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Ingrédient</th>
-                  <th>Quantité</th>
-                  <th>Unité</th>
-                  <th>Direction</th>
+                  <th>{{ _('Date') }}</th>
+                  <th>{{ _('Ingrédient') }}</th>
+                  <th>{{ _('Quantité') }}</th>
+                  <th>{{ _('Unité') }}</th>
+                  <th>{{ _('Direction') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -174,9 +181,9 @@
                     <td>{{ t.unite }}</td>
                     <td>
                       {% if t.sens == 'magasin_vers_cuisine' %}
-                        Magasin → Cuisine
+                        {{ _('Magasin → Cuisine') }}
                       {% else %}
-                        Cuisine → Magasin
+                        {{ _('Cuisine → Magasin') }}
                       {% endif %}
                     </td>
                   </tr>
@@ -187,25 +194,25 @@
             <nav class="mt-3">
               <ul class="pagination pagination-sm justify-content-center mb-0">
                 <li class="page-item {% if not transferts.has_prev %}disabled{% endif %}">
-                  <a class="page-link" href="{{ url_for('transfert', page=transferts.prev_num) }}">‹ Précédent</a>
+                  <a class="page-link" href="{{ url_for('transfert', page=transferts.prev_num) }}">{{ _('‹ Précédent') }}</a>
                 </li>
                 <li class="page-item disabled">
-                  <span class="page-link">Page {{ transferts.page }} / {{ transferts.pages }}</span>
+                  <span class="page-link">{{ _('Page') }} {{ transferts.page }} / {{ transferts.pages }}</span>
                 </li>
                 <li class="page-item {% if not transferts.has_next %}disabled{% endif %}">
-                  <a class="page-link" href="{{ url_for('transfert', page=transferts.next_num) }}">Suivant ›</a>
+                  <a class="page-link" href="{{ url_for('transfert', page=transferts.next_num) }}">{{ _('Suivant ›') }}</a>
                 </li>
               </ul>
             </nav>
             {% endif %}
           {% else %}
-            <p class="text-muted">Aucun transfert enregistré.</p>
+            <p class="text-muted">{{ _('Aucun transfert enregistré.') }}</p>
           {% endif %}
         </div>
       </div>
 
       <div class="text-center mt-4">
-        <a href="{{ url_for('home') }}" class="btn btn-outline-dark">← Retour à l'accueil</a>
+        <a href="{{ url_for('home') }}" class="btn btn-outline-dark">{{ _("← Retour à l'accueil") }}</a>
       </div>
 </div>
 

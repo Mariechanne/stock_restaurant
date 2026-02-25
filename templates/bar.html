@@ -34,13 +34,13 @@
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
             {% set nav_links = [
-                ('home', 'Accueil'),
-                ('ajouter', 'Ingrédients'),
-                ('recettes', 'Recettes'),
-                ('ventes', 'Ventes'),
-                ('transfert', 'Entrées (cuisine)'),
-                ('pointage_bar', 'Bar'),
-                ('entrees_boissons', 'Livraisons Bar')
+                ('home', _('Accueil')),
+                ('ajouter', _('Ingrédients')),
+                ('recettes', _('Recettes')),
+                ('ventes', _('Ventes')),
+                ('transfert', _('Entrées (cuisine)')),
+                ('pointage_bar', _('Bar')),
+                ('entrees_boissons', _('Livraisons Bar'))
             ] %}
             {% for endpoint, label in nav_links %}
             <li class="nav-item">
@@ -49,29 +49,36 @@
             {% endfor %}
             <li class="nav-item ms-3 d-flex align-items-center">
                 <span class="text-white-50 me-2 small">{{ current_user.username }}</span>
-                <a class="nav-link text-warning" href="{{ url_for('logout') }}">Déconnexion</a>
+                <a class="nav-link text-warning" href="{{ url_for('logout') }}">{{ _('Déconnexion') }}</a>
+            </li>
+            <li class="nav-item ms-2 d-flex align-items-center gap-1">
+                <a href="{{ url_for('set_language', lang='fr') }}"
+                   class="nav-link small py-0 px-1 {% if session.get('lang','fr')=='fr' %}text-white fw-bold{% else %}text-white-50{% endif %}">FR</a>
+                <span class="text-white-50 small">|</span>
+                <a href="{{ url_for('set_language', lang='en') }}"
+                   class="nav-link small py-0 px-1 {% if session.get('lang','fr')=='en' %}text-white fw-bold{% else %}text-white-50{% endif %}">EN</a>
             </li>
         </ul>
     </div>
 </nav>
 
 <div class="container mt-5">
-    <h1 class="text-center mb-4">🍸 Gestion Bar – Pointage Caisse</h1>
+    <h1 class="text-center mb-4">🍸 {{ _('Gestion Bar – Pointage Caisse') }}</h1>
 
     <!-- Formulaire ajout boisson -->
     <div class="card mb-4">
-        <div class="card-header bg-primary text-white">➕ Nouvelle boisson</div>
+        <div class="card-header bg-primary text-white">➕ {{ _('Nouvelle boisson') }}</div>
         <div class="card-body">
             <form method="POST" action="{{ url_for('ajouter_boisson') }}">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <input type="text" name="nom" class="form-control" placeholder="Nom de la boisson" required>
+                        <input type="text" name="nom" class="form-control" placeholder="{{ _('Nom de la boisson') }}" required>
                     </div>
                     <div class="col-md-4">
-                        <input type="number" step="0.01" name="prix" class="form-control" placeholder="Prix unitaire (F)" required>
+                        <input type="number" step="0.01" name="prix" class="form-control" placeholder="{{ _('Prix unitaire (F)') }}" required>
                     </div>
                     <div class="col-md-2 text-end">
-                        <button class="btn btn-success w-100" type="submit">Ajouter</button>
+                        <button class="btn btn-success w-100" type="submit">{{ _('Ajouter') }}</button>
                     </div>
                 </div>
             </form>
@@ -80,15 +87,15 @@
 
     <!-- Boissons existantes (édition prix / suppression) -->
     <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">🧃 Boissons enregistrées</div>
+        <div class="card-header bg-secondary text-white">🧃 {{ _('Boissons enregistrées') }}</div>
         <div class="card-body">
             {% if boissons %}
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Nom</th>
-                        <th>Prix unitaire (F)</th>
-                        <th class="text-end">Actions</th>
+                        <th>{{ _('Nom') }}</th>
+                        <th>{{ _('Prix unitaire (F)') }}</th>
+                        <th class="text-end">{{ _('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -113,45 +120,45 @@
                 </tbody>
             </table>
             {% else %}
-            <p class="text-muted">Aucune boisson enregistrée pour le moment.</p>
+            <p class="text-muted">{{ _('Aucune boisson enregistrée pour le moment.') }}</p>
             {% endif %}
         </div>
     </div>
 
     <!-- Filtre pointages (ancien tableau ventes) -->
-    <h2 class="mb-4">🔍 Filtrer les pointages</h2>
+    <h2 class="mb-4">🔍 {{ _('Filtrer les pointages') }}</h2>
     <form method="get" class="row g-2 mb-4">
         <div class="col-md-3">
-            <label class="form-label">Caissier :</label>
+            <label class="form-label">{{ _('Caissier') }} :</label>
             <select name="caissier_id" class="form-select">
-                <option value="">Tous les caissiers</option>
+                <option value="">{{ _('Tous les caissiers') }}</option>
                 {% for c in caissiers %}
                     <option value="{{ c.id }}" {% if caissier_id|int == c.id %}selected{% endif %}>{{ c.nom }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="col-md-3">
-            <label class="form-label">Du :</label>
+            <label class="form-label">{{ _('Du') }} :</label>
             <input type="date" name="date_debut" class="form-control" value="{{ date_debut }}">
         </div>
         <div class="col-md-3">
-            <label class="form-label">Au :</label>
+            <label class="form-label">{{ _('Au') }} :</label>
             <input type="date" name="date_fin" class="form-control" value="{{ date_fin }}">
         </div>
         <div class="col-md-3 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+            <button type="submit" class="btn btn-primary w-100">{{ _('Filtrer') }}</button>
         </div>
     </form>
 
-    <h5 class="mt-4">📊 Ventes filtrées</h5>
+    <h5 class="mt-4">📊 {{ _('Ventes filtrées') }}</h5>
     <table class="table table-bordered table-striped mt-2">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Caissier</th>
-                <th>Boisson</th>
-                <th>Quantité</th>
-                <th>Total (F)</th>
+                <th>{{ _('Date') }}</th>
+                <th>{{ _('Caissier') }}</th>
+                <th>{{ _('Boisson') }}</th>
+                <th>{{ _('Quantité') }}</th>
+                <th>{{ _('Total (F)') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -169,24 +176,24 @@
 
     <!-- Formulaire pointage bar (session de caisse sur PÉRIODE) -->
     <div class="card mb-5">
-        <div class="card-header bg-success text-white">📝 Nouveau pointage (session caisse — période)</div>
+        <div class="card-header bg-success text-white">📝 {{ _('Nouveau pointage (session caisse — période)') }}</div>
         <div class="card-body">
             <form method="POST" action="{{ url_for('pointage_bar') }}">
                 <div class="row g-3 mb-3">
                     <div class="col-md-3">
-                        <label class="form-label mb-1">Nom du caissier</label>
-                        <input type="text" name="caissier" class="form-control" placeholder="Nom du caissier" required>
+                        <label class="form-label mb-1">{{ _('Nom du caissier') }}</label>
+                        <input type="text" name="caissier" class="form-control" placeholder="{{ _('Nom du caissier') }}" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label mb-1">Du</label>
+                        <label class="form-label mb-1">{{ _('Du') }}</label>
                         <input type="date" name="date_debut" class="form-control" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label mb-1">Au</label>
+                        <label class="form-label mb-1">{{ _('Au') }}</label>
                         <input type="date" name="date_fin" class="form-control" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label mb-1">Montant réel remis (F)</label>
+                        <label class="form-label mb-1">{{ _('Montant réel remis (F)') }}</label>
                         <input type="number" step="0.01" name="montant_reel" class="form-control" required>
                     </div>
                 </div>
@@ -196,11 +203,11 @@
                     <table class="table table-sm align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th style="min-width:220px">Boisson</th>
+                                <th style="min-width:220px">{{ _('Boisson') }}</th>
                                 <th class="text-center">SI</th>
-                                <th class="text-center">ACHAT (période)</th>
+                                <th class="text-center">{{ _('ACHAT (période)') }}</th>
                                 <th class="text-center">SF</th>
-                                <th class="text-center">P.U (F)</th>
+                                <th class="text-center">{{ _('P.U (F)') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -211,7 +218,7 @@
                                     <input type="hidden" name="boisson_ids" value="{{ boisson.id }}">
                                 </td>
                                 <td class="text-center" style="max-width:120px">
-                                    <input type="number" step="0.01" name="stock_initial_{{ boisson.id }}" class="form-control form-control-sm" placeholder="auto si vide">
+                                    <input type="number" step="0.01" name="stock_initial_{{ boisson.id }}" class="form-control form-control-sm" placeholder="{{ _('auto si vide') }}">
                                 </td>
                                 <td class="text-center" style="max-width:140px">
                                     <input type="number" step="0.01" name="entrees_{{ boisson.id }}" class="form-control form-control-sm" placeholder="auto si vide">
@@ -229,7 +236,7 @@
                 </div>
 
                 <div class="text-end mt-3">
-                    <button class="btn btn-primary">Valider le pointage</button>
+                    <button class="btn btn-primary">{{ _('Valider le pointage') }}</button>
                 </div>
             </form>
         </div>
@@ -237,19 +244,19 @@
 
     <!-- Historique des sessions -->
     <div class="card" id="sessions">
-        <div class="card-header bg-dark text-white">📘 Historique des sessions (Attendu / Réel / Écart)</div>
+        <div class="card-header bg-dark text-white">📘 {{ _('Historique des sessions (Attendu / Réel / Écart)') }}</div>
         <div class="card-body">
             {% if sessions.items %}
             <div class="table-responsive">
                 <table class="table table-bordered align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th style="width:130px">Date (fin de période)</th>
-                            <th>Caissier</th>
-                            <th class="text-end">Attendu (F)</th>
-                            <th class="text-end">Réel (F)</th>
-                            <th class="text-end">Écart (F)</th>
-                            <th style="width:120px">Détails</th>
+                            <th style="width:130px">{{ _('Date (fin de période)') }}</th>
+                            <th>{{ _('Caissier') }}</th>
+                            <th class="text-end">{{ _('Attendu (F)') }}</th>
+                            <th class="text-end">{{ _('Réel (F)') }}</th>
+                            <th class="text-end">{{ _('Écart (F)') }}</th>
+                            <th style="width:120px">{{ _('Détails') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -262,7 +269,7 @@
                             <td class="text-end">{{ '%.0f'|format(s.ecart) }}</td>
                             <td>
                                 <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#sess{{ s.id }}">
-                                    Voir lignes
+                                    {{ _('Voir lignes') }}
                                 </button>
                             </td>
                         </tr>
@@ -306,19 +313,19 @@
             <nav class="mt-3">
               <ul class="pagination pagination-sm justify-content-center mb-0">
                 <li class="page-item {% if not sessions.has_prev %}disabled{% endif %}">
-                  <a class="page-link" href="{{ url_for('pointage_bar', page_sessions=sessions.prev_num, caissier_id=caissier_id, date_debut=date_debut, date_fin=date_fin) }}">‹ Précédent</a>
+                  <a class="page-link" href="{{ url_for('pointage_bar', page_sessions=sessions.prev_num, caissier_id=caissier_id, date_debut=date_debut, date_fin=date_fin) }}">{{ _('‹ Précédent') }}</a>
                 </li>
                 <li class="page-item disabled">
-                  <span class="page-link">Page {{ sessions.page }} / {{ sessions.pages }}</span>
+                  <span class="page-link">{{ _('Page') }} {{ sessions.page }} / {{ sessions.pages }}</span>
                 </li>
                 <li class="page-item {% if not sessions.has_next %}disabled{% endif %}">
-                  <a class="page-link" href="{{ url_for('pointage_bar', page_sessions=sessions.next_num, caissier_id=caissier_id, date_debut=date_debut, date_fin=date_fin) }}">Suivant ›</a>
+                  <a class="page-link" href="{{ url_for('pointage_bar', page_sessions=sessions.next_num, caissier_id=caissier_id, date_debut=date_debut, date_fin=date_fin) }}">{{ _('Suivant ›') }}</a>
                 </li>
               </ul>
             </nav>
             {% endif %}
             {% else %}
-                <p class="text-muted mb-0">Aucune session enregistrée pour le moment.</p>
+                <p class="text-muted mb-0">{{ _('Aucune session enregistrée pour le moment.') }}</p>
             {% endif %}
         </div>
     </div>

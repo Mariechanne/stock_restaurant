@@ -13,6 +13,7 @@ cryptography==44.0.3
 cssselect2==0.8.0
 defusedxml==0.7.1
 Flask==3.1.0
+Flask-Babel==4.0.0
 Flask-Login==0.6.3
 Flask-Migrate==4.1.0
 Flask-SQLAlchemy==3.1.1

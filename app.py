@@ -2,10 +2,11 @@ import csv
 import io
 import os
 from datetime import datetime, timedelta
-from flask import Flask, Response, render_template, request, redirect, url_for, flash
+from flask import Flask, Response, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_babel import Babel, _, lazy_gettext as _l
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func
 from flask import make_response
@@ -23,9 +24,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+
+def get_locale():
+    return session.get('lang', 'fr')
+
+
+babel = Babel(app, locale_selector=get_locale)
+
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-login_manager.login_message = "Veuillez vous connecter pour accéder à cette page."
+login_manager.login_message = _l("Veuillez vous connecter pour accéder à cette page.")
 login_manager.login_message_category = "warning"
 
 # ========================
@@ -202,6 +210,13 @@ with app.app_context():
 #         ROUTES
 # ========================
 
+@app.route('/set_language/<lang>')
+def set_language(lang):
+    if lang in ('fr', 'en'):
+        session['lang'] = lang
+    return redirect(request.referrer or url_for('home'))
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -214,14 +229,14 @@ def login():
             login_user(user)
             next_page = request.args.get('next')
             return redirect(next_page or url_for('home'))
-        flash("Identifiants incorrects.", "danger")
+        flash(_("Identifiants incorrects."), "danger")
     return render_template('login.html')
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash("Vous avez été déconnecté.", "info")
+    flash(_("Vous avez été déconnecté."), "info")
     return redirect(url_for('login'))
 
 @app.route('/bar', methods=['GET', 'POST'])
@@ -241,13 +256,13 @@ def pointage_bar():
         date_fin_str   = request.form.get('date_fin')
 
         if not caissier_nom or not date_debut_str or not date_fin_str or montant_reel in (None, ''):
-            flash("Caissier, période (du/au) et montant réel sont requis.", "danger")
+            flash(_("Caissier, période (du/au) et montant réel sont requis."), "danger")
             return redirect(url_for('pointage_bar'))
 
         try:
             montant_reel = float(montant_reel)
         except ValueError:
-            flash("Montant réel invalide.", "danger")
+            flash(_("Montant réel invalide."), "danger")
             return redirect(url_for('pointage_bar'))
 
         # Récupérer ou créer le caissier
@@ -262,11 +277,11 @@ def pointage_bar():
             date_debut = datetime.fromisoformat(date_debut_str).date()
             date_fin   = datetime.fromisoformat(date_fin_str).date()
         except Exception:
-            flash("Dates invalides.", "danger")
+            flash(_("Dates invalides."), "danger")
             return redirect(url_for('pointage_bar'))
 
         if date_debut > date_fin:
-            flash("La date de début doit être avant ou égale à la date de fin.", "danger")
+            flash(_("La date de début doit être avant ou égale à la date de fin."), "danger")
             return redirect(url_for('pointage_bar'))
 
         # On enregistre la session à la date de FIN (clôture de la période)
@@ -330,10 +345,12 @@ def pointage_bar():
 
         db.session.commit()
         flash(
-            f"Pointage enregistré (période {date_debut} → {date_fin}). "
-            f"Attendu: {session.montant_attendu:.0f} F | "
-            f"Réel: {session.montant_reel:.0f} F | "
-            f"Écart: {session.ecart:.0f} F",
+            _("Pointage enregistré (période %(debut)s → %(fin)s). "
+              "Attendu: %(att)s F | Réel: %(reel)s F | Écart: %(ecart)s F",
+              debut=str(date_debut), fin=str(date_fin),
+              att=f"{session.montant_attendu:.0f}",
+              reel=f"{session.montant_reel:.0f}",
+              ecart=f"{session.ecart:.0f}"),
             "success"
         )
         return redirect(url_for('pointage_bar'))
@@ -409,19 +426,19 @@ def entrees_boissons():
         note = (request.form.get('note') or '').strip()
 
         if not date_str or not boisson_id or quantite in (None, ''):
-            flash("Date, boisson et quantité sont requis.", "danger")
+            flash(_("Date, boisson et quantité sont requis."), "danger")
             return redirect(url_for('entrees_boissons'))
 
         try:
             qte = float(quantite)
         except ValueError:
-            flash("Quantité invalide.", "danger")
+            flash(_("Quantité invalide."), "danger")
             return redirect(url_for('entrees_boissons'))
 
         try:
             date_liv = datetime.fromisoformat(date_str).date()
         except Exception:
-            flash("Date invalide.", "danger")
+            flash(_("Date invalide."), "danger")
             return redirect(url_for('entrees_boissons'))
 
         db.session.add(EntreeBoisson(
@@ -431,7 +448,7 @@ def entrees_boissons():
             note=note
         ))
         db.session.commit()
-        flash("Entrée enregistrée.", "success")
+        flash(_("Entrée enregistrée."), "success")
         return redirect(url_for('entrees_boissons'))
 
     # --- Filtres GET ---
@@ -448,14 +465,14 @@ def entrees_boissons():
             d_deb = datetime.fromisoformat(date_debut_str).date()
             q = q.filter(EntreeBoisson.date >= d_deb)
     except Exception:
-        flash("Date de début invalide.", "warning")
+        flash(_("Date de début invalide."), "warning")
 
     try:
         if date_fin_str:
             d_fin = datetime.fromisoformat(date_fin_str).date()
             q = q.filter(EntreeBoisson.date <= d_fin)
     except Exception:
-        flash("Date de fin invalide.", "warning")
+        flash(_("Date de fin invalide."), "warning")
 
     # Boisson
     if boisson_id_f:
@@ -760,7 +777,7 @@ def ajouter():
 
         except Exception as e:
             db.session.rollback()
-            flash(f"Erreur lors de l'ajout : {e}", "error")
+            flash(_("Erreur lors de l'ajout : %(e)s", e=str(e)), "error")
 
     ingredients = Ingredient.query.order_by(Ingredient.nom.asc()).all()
     return render_template('ajouter.html', ingredients=ingredients)
@@ -779,11 +796,11 @@ def modifier(id):
         seuil_raw = request.form.get('seuil_alerte', '').strip()
         ingr.seuil_alerte = float(seuil_raw) if seuil_raw else None
     except ValueError:
-        flash("Erreur : les valeurs de stock doivent être numériques.", "danger")
+        flash(_("Erreur : les valeurs de stock doivent être numériques."), "danger")
         return redirect(url_for('ajouter'))
 
     db.session.commit()
-    flash("Ingrédient mis à jour avec succès !", "success")
+    flash(_("Ingrédient mis à jour avec succès !"), "success")
     return redirect(url_for('ajouter'))
 
 @app.route('/supprimer/<int:id>', methods=['POST'])
@@ -864,7 +881,7 @@ def dupliquer_recette(id):
         db.session.add(copie_ingredient)
 
     db.session.commit()
-    flash(f"Recette « {recette_originale.nom} » dupliquée avec succès.", "success")
+    flash(_("Recette « %(nom)s » dupliquée avec succès.", nom=recette_originale.nom), "success")
     return redirect(url_for('recettes'))
 
 @app.route('/ventes', methods=['GET', 'POST'])
@@ -909,11 +926,11 @@ def transfert():
             ingredient = Ingredient.query.get(ingredient_id)
 
             if not ingredient:
-                flash("Ingrédient introuvable", "error")
+                flash(_("Ingrédient introuvable"), "error")
             elif sens == 'magasin_vers_cuisine' and ingredient.stock_magasin < quantite:
-                flash("Stock magasin insuffisant", "error")
+                flash(_("Stock magasin insuffisant"), "error")
             elif sens == 'cuisine_vers_magasin' and ingredient.stock_cuisine < quantite:
-                flash("Stock cuisine insuffisant", "error")
+                flash(_("Stock cuisine insuffisant"), "error")
             else:
                 if sens == 'magasin_vers_cuisine':
                     ingredient.stock_magasin -= quantite
@@ -930,10 +947,10 @@ def transfert():
                     date=datetime.utcnow()
                 ))
                 db.session.commit()
-                flash("Transfert effectué avec succès", "success")
+                flash(_("Transfert effectué avec succès"), "success")
                 return redirect(url_for('transfert'))
         except Exception as e:
-            flash(f"Erreur : {str(e)}", "error")
+            flash(_("Erreur : %(e)s", e=str(e)), "error")
 
     return render_template('transfert.html', ingredients=ingredients, transferts=transferts)
 

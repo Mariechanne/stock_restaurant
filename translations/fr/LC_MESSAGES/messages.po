@@ -1,0 +1,526 @@
+# French translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-02-25 13:54+0100\n"
+"PO-Revision-Date: 2026-02-25 14:03+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app.py:232
+msgid "Identifiants incorrects."
+msgstr "Identifiants incorrects."
+
+#: app.py:239
+msgid "Vous avez été déconnecté."
+msgstr "Vous avez été déconnecté."
+
+#: app.py:259
+msgid "Caissier, période (du/au) et montant réel sont requis."
+msgstr "Caissier, période (du/au) et montant réel sont requis."
+
+#: app.py:265
+msgid "Montant réel invalide."
+msgstr "Montant réel invalide."
+
+#: app.py:280
+msgid "Dates invalides."
+msgstr "Dates invalides."
+
+#: app.py:284
+msgid "La date de début doit être avant ou égale à la date de fin."
+msgstr "La date de début doit être avant ou égale à la date de fin."
+
+#: app.py:348
+#, python-format
+msgid ""
+"Pointage enregistré (période %(debut)s → %(fin)s). Attendu: %(att)s F | "
+"Réel: %(reel)s F | Écart: %(ecart)s F"
+msgstr "Pointage enregistré (période %(debut)s → %(fin)s). Attendu: %(att)s F | Réel: %(reel)s F | Écart: %(ecart)s F"
+
+#: app.py:429
+msgid "Date, boisson et quantité sont requis."
+msgstr "Date, boisson et quantité sont requis."
+
+#: app.py:435
+msgid "Quantité invalide."
+msgstr "Quantité invalide."
+
+#: app.py:441
+msgid "Date invalide."
+msgstr "Date invalide."
+
+#: app.py:451
+msgid "Entrée enregistrée."
+msgstr "Entrée enregistrée."
+
+#: app.py:468
+msgid "Date de début invalide."
+msgstr "Date de début invalide."
+
+#: app.py:475
+msgid "Date de fin invalide."
+msgstr "Date de fin invalide."
+
+#: app.py:780
+#, python-format
+msgid "Erreur lors de l'ajout : %(e)s"
+msgstr "Erreur lors de l'ajout : %(e)s"
+
+#: app.py:799
+msgid "Erreur : les valeurs de stock doivent être numériques."
+msgstr "Erreur : les valeurs de stock doivent être numériques."
+
+#: app.py:803
+msgid "Ingrédient mis à jour avec succès !"
+msgstr "Ingrédient mis à jour avec succès !"
+
+#: app.py:884
+#, python-format
+msgid "Recette « %(nom)s » dupliquée avec succès."
+msgstr "Recette « %(nom)s » dupliquée avec succès."
+
+#: app.py:929
+msgid "Ingrédient introuvable"
+msgstr "Ingrédient introuvable"
+
+#: app.py:931
+msgid "Stock magasin insuffisant"
+msgstr "Stock magasin insuffisant"
+
+#: app.py:933
+msgid "Stock cuisine insuffisant"
+msgstr "Stock cuisine insuffisant"
+
+#: app.py:950
+msgid "Transfert effectué avec succès"
+msgstr "Transfert effectué avec succès"
+
+#: app.py:953
+#, python-format
+msgid "Erreur : %(e)s"
+msgstr "Erreur : %(e)s"
+
+#: templates/bar.html:37 templates/entrees.html:33
+#: templates/modifier_recette.html:75 templates/recettes.html:64
+#: templates/transfert.html:75 templates/ventes.html:75
+msgid "Accueil"
+msgstr "Accueil"
+
+#: templates/bar.html:38 templates/entrees.html:34
+#: templates/modifier_recette.html:76 templates/modifier_recette.html:121
+#: templates/recettes.html:65 templates/transfert.html:76
+#: templates/ventes.html:76
+msgid "Ingrédients"
+msgstr "Ingrédients"
+
+#: templates/bar.html:39 templates/entrees.html:35
+#: templates/modifier_recette.html:77 templates/recettes.html:66
+#: templates/transfert.html:77 templates/ventes.html:77
+msgid "Recettes"
+msgstr "Recettes"
+
+#: templates/bar.html:40 templates/entrees.html:36
+#: templates/modifier_recette.html:78 templates/recettes.html:67
+#: templates/transfert.html:78 templates/ventes.html:78
+msgid "Ventes"
+msgstr "Ventes"
+
+#: templates/bar.html:41 templates/entrees.html:37
+#: templates/modifier_recette.html:79 templates/recettes.html:68
+#: templates/transfert.html:79 templates/ventes.html:79
+msgid "Entrées (cuisine)"
+msgstr "Entrées (cuisine)"
+
+#: templates/bar.html:42 templates/entrees.html:38
+#: templates/modifier_recette.html:80 templates/recettes.html:69
+#: templates/transfert.html:80 templates/ventes.html:80
+msgid "Bar"
+msgstr "Bar"
+
+#: templates/bar.html:43 templates/entrees.html:39
+#: templates/modifier_recette.html:81 templates/recettes.html:70
+#: templates/transfert.html:81 templates/ventes.html:81
+msgid "Livraisons Bar"
+msgstr "Livraisons Bar"
+
+#: templates/bar.html:52 templates/entrees.html:49
+#: templates/modifier_recette.html:91 templates/recettes.html:80
+#: templates/transfert.html:91 templates/ventes.html:91
+msgid "Déconnexion"
+msgstr "Déconnexion"
+
+#: templates/bar.html:66
+msgid "Gestion Bar – Pointage Caisse"
+msgstr "Gestion Bar – Pointage Caisse"
+
+#: templates/bar.html:70
+msgid "Nouvelle boisson"
+msgstr "Nouvelle boisson"
+
+#: templates/bar.html:75
+msgid "Nom de la boisson"
+msgstr "Nom de la boisson"
+
+#: templates/bar.html:78 templates/bar.html:97
+msgid "Prix unitaire (F)"
+msgstr "Prix unitaire (F)"
+
+#: templates/bar.html:81
+msgid "Ajouter"
+msgstr "Ajouter"
+
+#: templates/bar.html:90
+msgid "Boissons enregistrées"
+msgstr "Boissons enregistrées"
+
+#: templates/bar.html:96
+msgid "Nom"
+msgstr "Nom"
+
+#: templates/bar.html:98
+msgid "Actions"
+msgstr "Actions"
+
+#: templates/bar.html:123
+msgid "Aucune boisson enregistrée pour le moment."
+msgstr "Aucune boisson enregistrée pour le moment."
+
+#: templates/bar.html:129
+msgid "Filtrer les pointages"
+msgstr "Filtrer les pointages"
+
+#: templates/bar.html:132 templates/bar.html:158 templates/bar.html:255
+msgid "Caissier"
+msgstr "Caissier"
+
+#: templates/bar.html:134
+msgid "Tous les caissiers"
+msgstr "Tous les caissiers"
+
+#: templates/bar.html:141 templates/bar.html:188 templates/entrees.html:117
+msgid "Du"
+msgstr "Du"
+
+#: templates/bar.html:145 templates/bar.html:192 templates/entrees.html:121
+msgid "Au"
+msgstr "Au"
+
+#: templates/bar.html:149 templates/entrees.html:126
+msgid "Filtrer"
+msgstr "Filtrer"
+
+#: templates/bar.html:153
+msgid "Ventes filtrées"
+msgstr "Ventes filtrées"
+
+#: templates/bar.html:157 templates/entrees.html:73 templates/entrees.html:148
+#: templates/transfert.html:168
+msgid "Date"
+msgstr "Date"
+
+#: templates/bar.html:159 templates/bar.html:206 templates/entrees.html:77
+#: templates/entrees.html:108 templates/entrees.html:149
+msgid "Boisson"
+msgstr "Boisson"
+
+#: templates/bar.html:160 templates/entrees.html:85 templates/entrees.html:150
+#: templates/modifier_recette.html:139 templates/transfert.html:136
+#: templates/transfert.html:170 templates/ventes.html:131
+msgid "Quantité"
+msgstr "Quantité"
+
+#: templates/bar.html:161
+msgid "Total (F)"
+msgstr "Total (F)"
+
+#: templates/bar.html:179
+msgid "Nouveau pointage (session caisse — période)"
+msgstr "Nouveau pointage (session caisse — période)"
+
+#: templates/bar.html:184 templates/bar.html:185
+msgid "Nom du caissier"
+msgstr "Nom du caissier"
+
+#: templates/bar.html:196
+msgid "Montant réel remis (F)"
+msgstr "Montant réel remis (F)"
+
+#: templates/bar.html:208
+msgid "ACHAT (période)"
+msgstr "ACHAT (période)"
+
+#: templates/bar.html:210
+msgid "P.U (F)"
+msgstr "P.U (F)"
+
+#: templates/bar.html:221
+msgid "auto si vide"
+msgstr "auto si vide"
+
+#: templates/bar.html:239
+msgid "Valider le pointage"
+msgstr "Valider le pointage"
+
+#: templates/bar.html:247
+msgid "Historique des sessions (Attendu / Réel / Écart)"
+msgstr "Historique des sessions (Attendu / Réel / Écart)"
+
+#: templates/bar.html:254
+msgid "Date (fin de période)"
+msgstr "Date (fin de période)"
+
+#: templates/bar.html:256
+msgid "Attendu (F)"
+msgstr "Attendu (F)"
+
+#: templates/bar.html:257
+msgid "Réel (F)"
+msgstr "Réel (F)"
+
+#: templates/bar.html:258
+msgid "Écart (F)"
+msgstr "Écart (F)"
+
+#: templates/bar.html:259
+msgid "Détails"
+msgstr "Détails"
+
+#: templates/bar.html:272
+msgid "Voir lignes"
+msgstr "Voir lignes"
+
+#: templates/bar.html:316 templates/entrees.html:169
+#: templates/transfert.html:197
+msgid "‹ Précédent"
+msgstr "‹ Précédent"
+
+#: templates/bar.html:319 templates/entrees.html:172
+#: templates/transfert.html:200
+msgid "Page"
+msgstr "Page"
+
+#: templates/bar.html:322 templates/entrees.html:175
+#: templates/transfert.html:203
+msgid "Suivant ›"
+msgstr "Suivant ›"
+
+#: templates/bar.html:328
+msgid "Aucune session enregistrée pour le moment."
+msgstr "Aucune session enregistrée pour le moment."
+
+#: templates/entrees.html:64
+msgid "Livraisons Bar (Entrées de boissons)"
+msgstr "Livraisons Bar (Entrées de boissons)"
+
+#: templates/entrees.html:68
+msgid "Nouvelle livraison"
+msgstr "Nouvelle livraison"
+
+#: templates/entrees.html:89
+msgid "Note (optionnel)"
+msgstr "Note (optionnel)"
+
+#: templates/entrees.html:94
+msgid "Enregistrer"
+msgstr "Enregistrer"
+
+#: templates/entrees.html:104
+msgid "Filtrer les livraisons"
+msgstr "Filtrer les livraisons"
+
+#: templates/entrees.html:110
+msgid "Toutes"
+msgstr "Toutes"
+
+#: templates/entrees.html:133
+msgid "Total filtré"
+msgstr "Total filtré"
+
+#: templates/entrees.html:142
+msgid "Entrées (résultats)"
+msgstr "Entrées (résultats)"
+
+#: templates/entrees.html:151
+msgid "Note"
+msgstr "Note"
+
+#: templates/entrees.html:181
+msgid "Aucune entrée pour ce filtre."
+msgstr "Aucune entrée pour ce filtre."
+
+#: templates/entrees.html:187
+msgid "← Retour au Bar"
+msgstr "← Retour au Bar"
+
+#: templates/login.html:6
+msgid "Connexion"
+msgstr "Connexion"
+
+#: templates/login.html:6 templates/login.html:40
+msgid "Gestion de Stock"
+msgstr "Gestion de Stock"
+
+#: templates/login.html:54
+msgid "Identifiant"
+msgstr "Identifiant"
+
+#: templates/login.html:59
+msgid "Mot de passe"
+msgstr "Mot de passe"
+
+#: templates/login.html:63
+msgid "Se connecter"
+msgstr "Se connecter"
+
+#: templates/modifier_recette.html:111
+msgid "Modifier la recette"
+msgstr "Modifier la recette"
+
+#: templates/modifier_recette.html:117 templates/recettes.html:103
+msgid "Nom de la recette"
+msgstr "Nom de la recette"
+
+#: templates/modifier_recette.html:148
+msgid "Enregistrer les modifications"
+msgstr "Enregistrer les modifications"
+
+#: templates/modifier_recette.html:149
+msgid "← Annuler"
+msgstr "← Annuler"
+
+#: templates/recettes.html:95
+msgid "Fiches Techniques"
+msgstr "Fiches Techniques"
+
+#: templates/recettes.html:99
+msgid "Créer une nouvelle recette"
+msgstr "Créer une nouvelle recette"
+
+#: templates/recettes.html:109
+msgid "Ajouter des ingrédients"
+msgstr "Ajouter des ingrédients"
+
+#: templates/recettes.html:114
+msgid "Rechercher un ingrédient..."
+msgstr "Rechercher un ingrédient..."
+
+#: templates/recettes.html:116
+msgid "Ingrédients utilisés"
+msgstr "Ingrédients utilisés"
+
+#: templates/recettes.html:126
+msgid "Quantité utilisée"
+msgstr "Quantité utilisée"
+
+#: templates/recettes.html:134
+msgid "Créer la recette"
+msgstr "Créer la recette"
+
+#: templates/recettes.html:143
+msgid "Recettes existantes"
+msgstr "Recettes existantes"
+
+#: templates/recettes.html:144
+msgid "Rechercher une recette..."
+msgstr "Rechercher une recette..."
+
+#: templates/recettes.html:160
+msgid "Modifier"
+msgstr "Modifier"
+
+#: templates/recettes.html:164
+msgid "Supprimer"
+msgstr "Supprimer"
+
+#: templates/recettes.html:169
+msgid "Dupliquer"
+msgstr "Dupliquer"
+
+#: templates/recettes.html:179
+msgid "Aucune recette enregistrée."
+msgstr "Aucune recette enregistrée."
+
+#: templates/recettes.html:186
+msgid "Retour à l'accueil"
+msgstr "Retour à l'accueil"
+
+#: templates/transfert.html:111
+msgid "Entrées de Stock"
+msgstr "Entrées de Stock"
+
+#: templates/transfert.html:122
+msgid "Effectuer un transfert"
+msgstr "Effectuer un transfert"
+
+#: templates/transfert.html:126 templates/transfert.html:169
+msgid "Ingrédient"
+msgstr "Ingrédient"
+
+#: templates/transfert.html:128
+msgid "-- Sélectionner --"
+msgstr "-- Sélectionner --"
+
+#: templates/transfert.html:141
+msgid "Sens du transfert"
+msgstr "Sens du transfert"
+
+#: templates/transfert.html:145 templates/transfert.html:184
+msgid "Magasin → Cuisine"
+msgstr "Magasin → Cuisine"
+
+#: templates/transfert.html:149 templates/transfert.html:186
+msgid "Cuisine → Magasin"
+msgstr "Cuisine → Magasin"
+
+#: templates/transfert.html:155
+msgid "Transférer"
+msgstr "Transférer"
+
+#: templates/transfert.html:162
+msgid "Historique des transferts"
+msgstr "Historique des transferts"
+
+#: templates/transfert.html:171
+msgid "Unité"
+msgstr "Unité"
+
+#: templates/transfert.html:172
+msgid "Direction"
+msgstr "Direction"
+
+#: templates/transfert.html:209
+msgid "Aucun transfert enregistré."
+msgstr "Aucun transfert enregistré."
+
+#: templates/transfert.html:215 templates/ventes.html:143
+msgid "← Retour à l'accueil"
+msgstr "← Retour à l'accueil"
+
+#: templates/ventes.html:111
+msgid "Vente de plats"
+msgstr "Vente de plats"
+
+#: templates/ventes.html:118
+msgid "Enregistrer une vente"
+msgstr "Enregistrer une vente"
+
+#: templates/ventes.html:122
+msgid "Plat vendu"
+msgstr "Plat vendu"
+
+#: templates/ventes.html:136
+msgid "Valider la vente"
+msgstr "Valider la vente"
+
