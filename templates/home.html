@@ -213,7 +213,7 @@
         </div>
         <div class="card-body">
           {% if recettes_labels and recettes_labels|length > 0 %}
-            <canvas id="chartCuisine" height="190" aria-label="Graphique plats les plus vendus" role="img"></canvas>
+            <canvas id="chartCuisine" style="height:280px" aria-label="Graphique plats les plus vendus" role="img"></canvas>
             <div class="table-responsive mt-3">
               <table class="table table-sm table-hover align-middle mb-0">
                 <thead class="table-light"><tr><th>{{ _('Recette') }}</th><th class="text-end">{{ _('Quantité') }}</th></tr></thead>
@@ -240,7 +240,7 @@
         </div>
         <div class="card-body">
           {% if boissons_labels and boissons_labels|length > 0 %}
-            <canvas id="chartBoissons" height="190" aria-label="Graphique boissons les plus vendues" role="img"></canvas>
+            <canvas id="chartBoissons" style="height:280px" aria-label="Graphique boissons les plus vendues" role="img"></canvas>
             <div class="table-responsive mt-3">
               <table class="table table-sm table-hover align-middle mb-0">
                 <thead class="table-light"><tr><th>{{ _('Boisson') }}</th><th class="text-end">{{ _('Quantité') }}</th></tr></thead>
@@ -351,41 +351,50 @@
     return s.replace(/\s*→\s*\d+\s*$/, '').replace(/\s*->\s*\d+\s*$/, '').trim().slice(0, 28);
   }
 
-  function makeHBar(canvasId, rawLabels, data, color) {
+  const PIE_COLORS = [
+    '#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f',
+    '#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac',
+    '#d4e157','#26a69a'
+  ];
+
+  function makePie(canvasId, rawLabels, data) {
     const el = document.getElementById(canvasId);
     if (!el || !rawLabels.length) return;
     const labels = rawLabels.map(shortLabel);
-    // Hauteur dynamique : 42px par barre, min 180px
-    el.style.height = Math.max(180, labels.length * 42) + 'px';
+    const total = data.reduce((a, b) => a + b, 0);
     new Chart(el.getContext('2d'), {
-      type: 'bar',
+      type: 'pie',
       data: {
         labels,
         datasets: [{
-          label: 'Quantités',
           data,
-          backgroundColor: color,
-          borderRadius: 6,
-          borderSkipped: false
+          backgroundColor: PIE_COLORS.slice(0, labels.length),
+          borderWidth: 2,
+          borderColor: '#fff'
         }]
       },
       options: {
-        indexAxis: 'y',
         maintainAspectRatio: false,
-        scales: {
-          x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' } },
-          y: { ticks: { font: { size: 12 } } }
-        },
         plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.x + ' unités' } }
+          legend: {
+            position: 'bottom',
+            labels: { font: { size: 12 }, padding: 12, boxWidth: 14 }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const pct = total > 0 ? (ctx.parsed / total * 100).toFixed(1) : 0;
+                return ` ${ctx.parsed} unités (${pct}%)`;
+              }
+            }
+          }
         }
       }
     });
   }
 
-  makeHBar('chartCuisine',  recettesLabels, recettesQtes,  'rgba(13,110,253,.75)');
-  makeHBar('chartBoissons', boissonsLabels, boissonsQtes,  'rgba(25,135,84,.75)');
+  makePie('chartCuisine',  recettesLabels, recettesQtes);
+  makePie('chartBoissons', boissonsLabels, boissonsQtes);
 </script>
 </body>
 </html>
