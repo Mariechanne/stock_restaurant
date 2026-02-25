@@ -2,6 +2,8 @@ import csv
 import io
 import os
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+load_dotenv()
 from flask import Flask, Response, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
