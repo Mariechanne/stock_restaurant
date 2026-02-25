@@ -264,18 +264,24 @@
   <div class="accordion" id="detailsAccordion">
     <div class="accordion-item">
       <h2 class="accordion-header" id="hSales">
-        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cSales" aria-expanded="true" aria-controls="cSales">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cSales" aria-expanded="false" aria-controls="cSales">
           🛒 {{ _('Ventes en cuisine') }}
+          {% if ventes_mois %}<span class="badge bg-secondary ms-2">{{ ventes_mois|length }}</span>{% endif %}
         </button>
       </h2>
-      <div id="cSales" class="accordion-collapse collapse show" aria-labelledby="hSales" data-bs-parent="#detailsAccordion">
+      <div id="cSales" class="accordion-collapse collapse" aria-labelledby="hSales" data-bs-parent="#detailsAccordion">
         <div class="accordion-body">
           {% if ventes_mois %}
+            {% if ventes_mois|length > 100 %}
+            <div class="alert alert-info py-2 small mb-2">
+              {{ ventes_mois|length }} lignes — affichage limité aux 100 dernières. Utilisez le CSV pour l'export complet.
+            </div>
+            {% endif %}
             <div class="table-responsive">
               <table class="table table-hover table-bordered border-light shadow-sm mt-2">
                 <thead class="table-light"><tr><th>{{ _('Date') }}</th><th>{{ _('Recette') }}</th><th class="text-end">{{ _('Quantité') }}</th></tr></thead>
                 <tbody>
-                {% for vente in ventes_mois %}
+                {% for vente in ventes_mois[-100:] %}
                   <tr>
                     <td>{{ vente.date.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>{{ vente.recette.nom }}</td>
@@ -340,31 +346,46 @@
   const boissonsLabels = {{ boissons_labels|tojson }};
   const boissonsQtes   = {{ boissons_qtes|tojson }};
 
-  // Chart: Cuisine
-  if (recettesLabels.length) {
-    new Chart(document.getElementById('chartCuisine').getContext('2d'), {
+  // Raccourcit les noms : retire " → 1500" et tronque à 28 cars
+  function shortLabel(s) {
+    return s.replace(/\s*→\s*\d+\s*$/, '').replace(/\s*->\s*\d+\s*$/, '').trim().slice(0, 28);
+  }
+
+  function makeHBar(canvasId, rawLabels, data, color) {
+    const el = document.getElementById(canvasId);
+    if (!el || !rawLabels.length) return;
+    const labels = rawLabels.map(shortLabel);
+    // Hauteur dynamique : 42px par barre, min 180px
+    el.style.height = Math.max(180, labels.length * 42) + 'px';
+    new Chart(el.getContext('2d'), {
       type: 'bar',
-      data: { labels: recettesLabels, datasets: [{ label:'Quantités vendues', data: recettesQtes }] },
+      data: {
+        labels,
+        datasets: [{
+          label: 'Quantités',
+          data,
+          backgroundColor: color,
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
       options: {
-        maintainAspectRatio:false,
-        scales:{ y:{ beginAtZero:true }, x:{ ticks:{ autoSkip:false, maxRotation:45 } } },
-        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:(ctx)=> ctx.parsed.y } } }
+        indexAxis: 'y',
+        maintainAspectRatio: false,
+        scales: {
+          x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' } },
+          y: { ticks: { font: { size: 12 } } }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.x + ' unités' } }
+        }
       }
     });
   }
 
-  // Chart: Bar
-  if (boissonsLabels.length) {
-    new Chart(document.getElementById('chartBoissons').getContext('2d'), {
-      type: 'bar',
-      data: { labels: boissonsLabels, datasets: [{ label:'Quantités vendues', data: boissonsQtes }] },
-      options: {
-        maintainAspectRatio:false,
-        scales:{ y:{ beginAtZero:true }, x:{ ticks:{ autoSkip:false, maxRotation:45 } } },
-        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:(ctx)=> ctx.parsed.y } } }
-      }
-    });
-  }
+  makeHBar('chartCuisine',  recettesLabels, recettesQtes,  'rgba(13,110,253,.75)');
+  makeHBar('chartBoissons', boissonsLabels, boissonsQtes,  'rgba(25,135,84,.75)');
 </script>
 </body>
 </html>
