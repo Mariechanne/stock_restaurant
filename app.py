@@ -12,7 +12,6 @@ from flask_babel import Babel, _, lazy_gettext as _l
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func
 from flask import make_response
-from xhtml2pdf import pisa
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret")  # nécessaire pour flash()
@@ -504,8 +503,6 @@ def entrees_boissons():
 
 # --- Accueil / Rapports / Cuisine ---
 
-from flask import make_response  # déjà importé chez toi
-
 @app.route('/')
 @login_required
 def home():
@@ -714,6 +711,7 @@ def rapport_cuisine_periode_pdf():
         ingredients=ingredients
     )
 
+    from xhtml2pdf import pisa
     result = io.BytesIO()
     pisa_status = pisa.CreatePDF(io.StringIO(html), dest=result)
     if pisa_status.err:
@@ -749,6 +747,7 @@ def rapport_journalier_pdf():
         ingredients=ingredients
     )
 
+    from xhtml2pdf import pisa
     result = io.BytesIO()
     pisa_status = pisa.CreatePDF(io.StringIO(html), dest=result)
 
