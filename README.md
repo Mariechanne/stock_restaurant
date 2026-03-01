@@ -3,6 +3,17 @@
 Application Flask de gestion des stocks pour le restaurant **Lotus Garden** :
 cuisine (ingrédients, recettes, ventes, transferts) et bar (boissons, sessions de caisse, pointage).
 
+## Démo en ligne
+
+> **URL :** [https://lotus-garden-stock.onrender.com](https://lotus-garden-stock.onrender.com)
+>
+> | Identifiant | Mot de passe |
+> |-------------|--------------|
+> | `admin` | `admin` |
+>
+> La base de données est pré-remplie avec 6 mois de données fictives (août 2025 – janvier 2026).
+> Les données sont réinitialisées à chaque redémarrage du service (hébergement gratuit Render).
+
 ---
 
 ## Fonctionnalités
