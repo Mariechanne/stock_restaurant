@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: lotus-garden-stock
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python demo_init.py && gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        value: admin
+      - key: FLASK_APP
+        value: app.py
